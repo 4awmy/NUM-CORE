@@ -236,6 +236,7 @@ class NumericalCLI:
             options = [
                 "Gauss-Seidel Method",
                 "Jacobi Method",
+                "Compare Both Methods",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -251,6 +252,8 @@ class NumericalCLI:
             elif choice == 2:
                 self.run_jacobi()
             elif choice == 3:
+                self.run_comparison()
+            elif choice == 4:
                 break
 
     def run_gauss_seidel(self):
@@ -425,6 +428,165 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_comparison(self):
+        """Run Jacobi vs Gauss-Seidel comparison."""
+        self.clear_screen()
+        self.display_header("Compare Both Methods", "Jacobi vs Gauss-Seidel side-by-side")
+
+        self.console.print(Panel(
+            "Runs both Jacobi and Gauss-Seidel on the same input and shows a side-by-side "
+            "comparison table highlighting the winner for each metric.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+
+        if is_example:
+            matrix = [
+                [4.0, -1.0, -1.0],
+                [-1.0, 4.0, -1.0],
+                [-1.0, -1.0, 4.0]
+            ]
+            b = [3.0, 2.0, 1.0]
+            x0 = [0.0, 0.0, 0.0]
+            tol = 1e-6
+            max_iter = 100
+            self.console.print(f"[bold cyan]Example: 3x3 System (Truss Analysis)[/bold cyan]")
+            self.console.print(f"Matrix A: {matrix}")
+            self.console.print(f"Vector b: {b}")
+        else:
+            n = IntPrompt.ask("Enter number of equations", default=3)
+            matrix = []
+            for i in range(n):
+                while True:
+                    row_str = Prompt.ask(f"Enter coefficients for equation {i+1} (space separated)")
+                    try:
+                        row = [float(x) for x in row_str.split()]
+                        if len(row) != n:
+                            self.console.print(f"[bold red]Error: Expected {n} coefficients, got {len(row)}[/bold red]")
+                            continue
+                        matrix.append(row)
+                        break
+                    except ValueError:
+                        self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+
+            while True:
+                b_str = Prompt.ask("Enter constants b (space separated)")
+                try:
+                    b = [float(x) for x in b_str.split()]
+                    if len(b) != n:
+                        self.console.print(f"[bold red]Error: Expected {n} constants, got {len(b)}[/bold red]")
+                        continue
+                    break
+                except ValueError:
+                    self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+
+            initial_guess_str = Prompt.ask("Enter initial guess (space separated)", default=" ".join(["0"] * n))
+            try:
+                x0 = [float(x) for x in initial_guess_str.split()]
+                if len(x0) != n:
+                    x0 = [0.0] * n
+            except ValueError:
+                x0 = [0.0] * n
+
+            tol = FloatPrompt.ask("Enter tolerance", default=1e-6)
+            max_iter = IntPrompt.ask("Enter max iterations", default=100)
+
+        jacobi_solver = JacobiSolver()
+        gs_solver = GaussSeidelSolver()
+
+        try:
+            jacobi_result = jacobi_solver.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+            jacobi_steps = jacobi_solver.get_steps()
+
+            gs_result = gs_solver.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+            gs_steps = gs_solver.get_steps()
+
+            j_iters = jacobi_result.metadata["iterations"]
+            gs_iters = gs_result.metadata["iterations"]
+            j_error = jacobi_result.metadata["final_error"]
+            gs_error = gs_result.metadata["final_error"]
+            j_conv = jacobi_result.metadata["converged"]
+            gs_conv = gs_result.metadata["converged"]
+
+            def _winner(j_val: Any, gs_val: Any, lower_is_better: bool = True) -> str:
+                if j_val == gs_val:
+                    return "[dim]Tie[/dim]"
+                if lower_is_better:
+                    return "[bold cyan]J[/bold cyan]" if j_val < gs_val else "[bold green]G-S[/bold green]"
+                return "[bold cyan]J[/bold cyan]" if j_val > gs_val else "[bold green]G-S[/bold green]"
+
+            comp_table = Table(
+                title="Jacobi vs Gauss-Seidel — Comparison",
+                show_header=True,
+                header_style="bold magenta",
+                border_style="dim",
+            )
+            comp_table.add_column("Metric", style="bold white", no_wrap=True)
+            comp_table.add_column("Jacobi", justify="center", style="cyan")
+            comp_table.add_column("Gauss-Seidel", justify="center", style="green")
+            comp_table.add_column("Winner", justify="center", style="bold yellow")
+
+            comp_table.add_row(
+                "Iterations",
+                str(j_iters),
+                str(gs_iters),
+                _winner(j_iters, gs_iters, lower_is_better=True),
+            )
+            comp_table.add_row(
+                "Final Error",
+                f"{j_error:.4e}",
+                f"{gs_error:.4e}",
+                _winner(j_error, gs_error, lower_is_better=True),
+            )
+
+            def _conv_str(c: bool) -> str:
+                return "Yes" if c else "No"
+
+            conv_winner = "[dim]Tie[/dim]" if j_conv == gs_conv else (
+                "[bold cyan]J[/bold cyan]" if j_conv else "[bold green]G-S[/bold green]"
+            )
+            comp_table.add_row(
+                "Converged",
+                _conv_str(j_conv),
+                _conv_str(gs_conv),
+                conv_winner,
+            )
+
+            for idx, (jv, gv) in enumerate(zip(jacobi_result.y_data, gs_result.y_data), start=1):
+                # Solutions are considered equal when they differ by less than 10× the solver
+                # tolerance — a small multiple to absorb floating-point rounding between the
+                # two methods while still detecting genuinely different solutions.
+                same = abs(jv - gv) < tol * 10
+                sol_winner = "[dim]Same[/dim]" if same else _winner(abs(jv), abs(gv), lower_is_better=False)
+                comp_table.add_row(
+                    f"Solution x{idx}",
+                    f"{jv:.6f}",
+                    f"{gv:.6f}",
+                    sol_winner,
+                )
+
+            self.console.print(comp_table)
+
+            verbose = Prompt.ask(
+                "\nShow step-by-step tables for each method? (y/n)",
+                choices=["y", "n"],
+                default="n"
+            ) == "y"
+
+            if verbose:
+                self.console.print()
+                self.formatter.display_linear_steps(jacobi_steps, method_name="Jacobi")
+                self.console.print()
+                self.formatter.display_linear_steps(gs_steps, method_name="Gauss-Seidel")
+
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
 
