@@ -165,7 +165,7 @@ class NumericalCLI:
                 max_iterations=max_iterations
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title="Newton-Raphson Iterations")
+            self.formatter.display_newton_raphson_steps(steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
@@ -215,7 +215,7 @@ class NumericalCLI:
                 max_iterations=max_iterations
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title="Simple Iteration Steps")
+            self.formatter.display_simple_iteration_steps(steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
@@ -329,7 +329,7 @@ class NumericalCLI:
                 max_iter=max_iter
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title="Gauss-Seidel Iterations")
+            self.formatter.display_linear_steps(steps, method_name="Gauss-Seidel")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]",
                 title="Result",
@@ -417,7 +417,7 @@ class NumericalCLI:
                 max_iter=max_iter
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title="Jacobi Iterations")
+            self.formatter.display_linear_steps(steps, method_name="Jacobi")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']} | "
@@ -503,7 +503,7 @@ class NumericalCLI:
                 target_x=target_x
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title="Newton's Divided Difference Steps")
+            self.formatter.display_interpolation_steps(steps)
             self.console.print(Panel(
                 f"[bold green]Interpolated values: {result.y_data}[/bold green]",
                 title="Result",
@@ -561,7 +561,7 @@ class NumericalCLI:
                 method=method
             )
             steps = solver.get_steps()
-            self.formatter.display_steps(steps, title=f"Integration Steps ({method})")
+            self.formatter.display_integration_steps(steps)
             self.console.print(Panel(
                 f"[bold green]Total Integral: {result.metadata['total_integral']:.8f}[/bold green]",
                 title="Result",

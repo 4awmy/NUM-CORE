@@ -58,7 +58,7 @@ class NewtonRaphsonSolver:
                 step_idx=i,
                 value=x_next,
                 error=error,
-                details={"f(x)": float(fx), "f'(x)": float(dfx)},
+                details={"x_n": float(x_n), "f(x)": float(fx), "f'(x)": float(dfx)},
             )
             self._steps.append(step)
             x_history.append(float(i))
@@ -131,7 +131,7 @@ class SimpleIterationSolver:
                 step_idx=i,
                 value=x_next,
                 error=error,
-                details={"g(x)": float(x_next)},
+                details={"x_n": float(x_n), "g(x)": float(x_next)},
             )
             self._steps.append(step)
             x_history.append(float(i))
