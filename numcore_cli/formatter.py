@@ -8,6 +8,8 @@ from rich import box
 
 from numcore_engine.models import NumericalStep
 
+import csv
+
 
 class NumericalFormatter:
     """
@@ -19,6 +21,47 @@ class NumericalFormatter:
     # ──────────────────────────────────────────────────────────────
     # Generic fallback
     # ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def export_steps_to_csv(steps, filename, method):
+        try:
+            if not steps:
+                print("No data to export.")
+                return
+
+            with open(filename, "w", newline="") as f:
+                writer = csv.writer(f)
+                if not filename.endswith(".csv"):
+                    filename += ".csv"
+
+                # pega todas as chaves possíveis de details
+                detail_keys = sorted({
+                    key for step in steps for key in step.details.keys()
+                })
+
+                # cabeçalho
+                headers = ["iteration", "value", "error"] + detail_keys
+                writer.writerow(headers)
+
+                # linhas
+                for step in steps:
+                    row = [
+                        step.step_idx + 1,
+                        step.value,
+                        step.error if step.error is not None else ""
+                    ]
+
+                    for key in detail_keys:
+                        val = step.details.get(key, "")
+                        row.append(val)
+
+                    writer.writerow(row)
+
+            print(f"Saved: {filename}")
+
+        except Exception as e:
+            print(f"Error saving CSV: {e}")
+
 
     @staticmethod
     def format_steps(steps: List[NumericalStep], title: Optional[str] = None) -> Table:
@@ -108,7 +151,7 @@ class NumericalFormatter:
                 f"{err:.4e}"    if err is not None          else "--",
                 Text(converging, style=status_style),
             )
-
+        
         console.print(table)
 
     # ──────────────────────────────────────────────────────────────

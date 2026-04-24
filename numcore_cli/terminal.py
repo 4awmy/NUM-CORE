@@ -36,6 +36,18 @@ class NumericalCLI:
         """Clear the terminal screen."""
         self.console.clear()
 
+    def ask_export(self, steps, method):
+
+        export = input("Export results to CSV? y/n [n]: ").strip().lower()
+
+        if export == "y":
+            filename = input("Enter filename [results.csv]: ").strip()
+
+            if not filename:
+                filename = "results.csv"
+
+            self.formatter.export_steps_to_csv(steps, filename, method)
+
     def display_header(self, title: str, subtitle: Optional[str] = None):
         """Display a consistent header for all screens."""
         header_text = Text()
@@ -172,6 +184,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "newton")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -222,6 +235,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "simple")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -335,6 +349,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "gauss")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -425,6 +440,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "jacobi")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
 
@@ -509,6 +525,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "interpolation")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -567,11 +584,11 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(steps, "integration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
         Prompt.ask("\nPress Enter to return to menu")
-
 
 def launch_cli():
     """Launch the CLI application."""
