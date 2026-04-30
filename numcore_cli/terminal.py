@@ -7,6 +7,7 @@ from rich.prompt import Prompt, FloatPrompt, IntPrompt
 from rich.table import Table
 from rich.text import Text
 from rich.align import Align
+from rich import box
 
 from numcore_engine.solvers import (
     NewtonRaphsonSolver,
@@ -79,7 +80,7 @@ class NumericalCLI:
             
             options = [
                 "Root Finding (Newton-Raphson, Simple Iteration)",
-                "Linear Systems (Gauss-Seidel)",
+                "Linear Systems (Gauss-Seidel, Jacobi)",
                 "Calculus (Interpolation, Integration)",
                 "Exit"
             ]
@@ -172,6 +173,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Newton-Raphson")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -222,10 +224,25 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Simple Iteration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
         Prompt.ask("\nPress Enter to return to menu")
+
+    def display_result_and_export(self, result: Any, steps: List[Any], method_name: str):
+        """Display result, check for divergence, and offer CSV export."""
+        if result.metadata.get("diverged"):
+            self.console.print(Panel(
+                "[bold red]WARNING: The method appears to be diverging![/bold red]\n"
+                "The error is increasing instead of decreasing. Results may be unreliable.",
+                title="Divergence Warning",
+                border_style="red"
+            ))
+
+        if Prompt.ask("Export steps to CSV? (y/n)", choices=["y", "n"], default="n") == "y":
+            filename = self.formatter.export_steps_to_csv(steps, method_name)
+            self.console.print(f"[bold green]Successfully exported to {filename}[/bold green]")
 
     def network_solver_menu(self):
         """Network solver submenu."""
@@ -236,6 +253,7 @@ class NumericalCLI:
             options = [
                 "Gauss-Seidel Method",
                 "Jacobi Method",
+                "Compare Both Methods",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -251,7 +269,76 @@ class NumericalCLI:
             elif choice == 2:
                 self.run_jacobi()
             elif choice == 3:
+                self.run_comparison()
+            elif choice == 4:
                 break
+
+    def run_comparison(self):
+        """Run both Jacobi and Gauss-Seidel on the same input and compare."""
+        self.clear_screen()
+        self.display_header("Method Comparison", "Jacobi vs Gauss-Seidel")
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            matrix = [[4.0, -1.0, -1.0], [-1.0, 4.0, -1.0], [-1.0, -1.0, 4.0]]
+            b = [3.0, 2.0, 1.0]
+            x0 = [0.0, 0.0, 0.0]
+            tol = 1e-6
+            max_iter = 100
+        else:
+            n = IntPrompt.ask("Enter number of equations", default=3)
+            matrix = []
+            for i in range(n):
+                while True:
+                    row_str = Prompt.ask(f"Enter coefficients for equation {i+1} (space separated)")
+                    try:
+                        row = [float(x) for x in row_str.split()]
+                        if len(row) != n: continue
+                        matrix.append(row)
+                        break
+                    except ValueError: pass
+            
+            b_str = Prompt.ask("Enter constants b (space separated)")
+            b = [float(x) for x in b_str.split()]
+            
+            initial_guess_str = Prompt.ask("Enter initial guess (space separated)", default=" ".join(["0"]*n))
+            x0 = [float(x) for x in initial_guess_str.split()]
+            
+            tol = FloatPrompt.ask("Enter tolerance", default=1e-6)
+            max_iter = IntPrompt.ask("Enter max iterations", default=100)
+
+        jacobi = JacobiSolver()
+        gs = GaussSeidelSolver()
+
+        try:
+            res_j = jacobi.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+            res_gs = gs.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+
+            table = Table(title="Solver Comparison", box=box.ROUNDED)
+            table.add_column("Metric", style="cyan")
+            table.add_column("Jacobi", justify="center")
+            table.add_column("Gauss-Seidel", justify="center")
+            table.add_column("Winner", justify="center", style="bold green")
+
+            iter_winner = "Gauss-Seidel" if res_gs.metadata['iterations'] < res_j.metadata['iterations'] else "Jacobi"
+            if res_gs.metadata['iterations'] == res_j.metadata['iterations']: iter_winner = "Tie"
+
+            table.add_row("Iterations", str(res_j.metadata['iterations']), str(res_gs.metadata['iterations']), iter_winner)
+            table.add_row("Final Error", f"{res_j.metadata['final_error']:.4e}", f"{res_gs.metadata['final_error']:.4e}", "N/A")
+            table.add_row("Converged", str(res_j.metadata['converged']), str(res_gs.metadata['converged']), "N/A")
+            
+            self.console.print(table)
+            
+            self.console.print("\n[bold]Final Solutions:[/bold]")
+            self.console.print(f"Jacobi: {res_j.y_data}")
+            self.console.print(f"Gauss-Seidel: {res_gs.y_data}")
+
+        except Exception as e:
+            self.console.print(f"[bold red]Error during comparison: {str(e)}[/bold red]")
+
+        Prompt.ask("\nPress Enter to return to menu")
+
 
     def run_gauss_seidel(self):
         """Run Gauss-Seidel solver."""
@@ -335,6 +422,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Gauss-Seidel")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -425,9 +513,10 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Jacobi")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
-
+        
         Prompt.ask("\nPress Enter to return to menu")
 
     def calculus_menu(self):
@@ -509,6 +598,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Interpolation")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -567,6 +657,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.display_result_and_export(result, steps, "Integration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         

@@ -24,19 +24,50 @@ class GaussSeidelSolver(Solver):
         except (ValueError, TypeError):
             return False
 
-    def _ensure_diagonal_dominance(self, A: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _ensure_diagonal_dominance(self, A: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray, bool]:
         n = A.shape[0]
         A_new = A.copy()
         b_new = b.copy()
+        reordered = False
         
+        # Check if already diagonally dominant
+        is_dominant = True
         for i in range(n):
-            # Find the row with the largest absolute value in column i
-            max_row = i + np.argmax(np.abs(A_new[i:, i]))
-            if max_row != i:
-                A_new[[i, max_row]] = A_new[[max_row, i]]
-                b_new[[i, max_row]] = b_new[[max_row, i]]
+            if np.abs(A[i, i]) <= np.sum(np.abs(A[i, :])) - np.abs(A[i, i]):
+                is_dominant = False
+                break
         
-        return A_new, b_new
+        if is_dominant:
+            return A_new, b_new, False
+
+        # Try to reorder to achieve diagonal dominance
+        # This is a simple heuristic: for each row, find the column with the max element
+        # and try to place it on the diagonal.
+        used_rows = set()
+        new_order = []
+        for i in range(n):
+            # Find row j not in used_rows such that |A[j, i]| is maximum
+            best_row = -1
+            max_val = -1.0
+            for j in range(n):
+                if j not in used_rows:
+                    if np.abs(A[j, i]) > max_val:
+                        max_val = np.abs(A[j, i])
+                        best_row = j
+            
+            if best_row != -1:
+                new_order.append(best_row)
+                used_rows.add(best_row)
+            else:
+                # Fallback to original order if we can't find a unique row
+                return A, b, False
+
+        if len(new_order) == n:
+            A_new = A[new_order, :]
+            b_new = b[new_order]
+            reordered = list(new_order) != list(range(n))
+        
+        return A_new, b_new, reordered
 
     def solve(self, **kwargs: Any) -> SimulationData:
         if not self.validate_input(**kwargs):
@@ -50,7 +81,7 @@ class GaussSeidelSolver(Solver):
         title = kwargs.get("title", "Gauss-Seidel Solution")
 
         # Row-swapping for diagonal dominance
-        A, b = self._ensure_diagonal_dominance(A, b)
+        A, b, reordered = self._ensure_diagonal_dominance(A, b)
         
         n = A.shape[0]
         
@@ -67,13 +98,27 @@ class GaussSeidelSolver(Solver):
         self._steps = []
         
         error = float('inf')
+        growing_error_count = 0
+        diverged = False
+        
         for k in range(max_iter):
             x_old = x.copy()
             for i in range(n):
                 sum_j = np.dot(A[i, :i], x[:i]) + np.dot(A[i, i+1:], x_old[i+1:])
                 x[i] = (b[i] - sum_j) / A[i, i]
             
+            prev_error = error
             error = np.linalg.norm(x - x_old, ord=np.inf)
+            
+            # Divergence detection: 5 consecutive growing errors
+            if k > 0 and error > prev_error:
+                growing_error_count += 1
+            else:
+                growing_error_count = 0
+            
+            if growing_error_count >= 5:
+                diverged = True
+            
             self._steps.append(NumericalStep(
                 step_idx=k,
                 value=float(error),
@@ -81,7 +126,7 @@ class GaussSeidelSolver(Solver):
                 details={"x": x.tolist()}
             ))
             
-            if error < tol:
+            if error < tol or diverged:
                 break
         
         return SimulationData(
@@ -91,7 +136,9 @@ class GaussSeidelSolver(Solver):
             metadata={
                 "iterations": len(self._steps),
                 "final_error": float(error) if self._steps else 0.0,
-                "converged": bool(error < tol) if self._steps else True
+                "converged": bool(error < tol and not diverged) if self._steps else True,
+                "reordered": reordered,
+                "diverged": diverged
             }
         )
 
@@ -127,19 +174,47 @@ class JacobiSolver(Solver):
         except (ValueError, TypeError):
             return False
 
-    def _ensure_diagonal_dominance(self, A: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _ensure_diagonal_dominance(self, A: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray, bool]:
         """Row-swap to maximize diagonal dominance."""
         n = A.shape[0]
         A_new = A.copy()
         b_new = b.copy()
+        reordered = False
 
+        # Check if already diagonally dominant
+        is_dominant = True
         for i in range(n):
-            max_row = i + np.argmax(np.abs(A_new[i:, i]))
-            if max_row != i:
-                A_new[[i, max_row]] = A_new[[max_row, i]]
-                b_new[[i, max_row]] = b_new[[max_row, i]]
+            if np.abs(A[i, i]) <= np.sum(np.abs(A[i, :])) - np.abs(A[i, i]):
+                is_dominant = False
+                break
+        
+        if is_dominant:
+            return A_new, b_new, False
 
-        return A_new, b_new
+        # Try to reorder to achieve diagonal dominance
+        used_rows = set()
+        new_order = []
+        for i in range(n):
+            best_row = -1
+            max_val = -1.0
+            for j in range(n):
+                if j not in used_rows:
+                    if np.abs(A[j, i]) > max_val:
+                        max_val = np.abs(A[j, i])
+                        best_row = j
+            
+            if best_row != -1:
+                new_order.append(best_row)
+                used_rows.add(best_row)
+            else:
+                return A, b, False
+
+        if len(new_order) == n:
+            A_new = A[new_order, :]
+            b_new = b[new_order]
+            reordered = list(new_order) != list(range(n))
+
+        return A_new, b_new, reordered
 
     def solve(self, **kwargs: Any) -> SimulationData:
         if not self.validate_input(**kwargs):
@@ -153,7 +228,7 @@ class JacobiSolver(Solver):
         title = kwargs.get("title", "Jacobi Solution")
 
         # Row-swapping for diagonal dominance
-        A, b = self._ensure_diagonal_dominance(A, b)
+        A, b, reordered = self._ensure_diagonal_dominance(A, b)
 
         n = A.shape[0]
 
@@ -169,6 +244,9 @@ class JacobiSolver(Solver):
         self._steps = []
 
         error = float("inf")
+        growing_error_count = 0
+        diverged = False
+
         for k in range(max_iter):
             x_new = np.zeros(n)
             for i in range(n):
@@ -176,7 +254,18 @@ class JacobiSolver(Solver):
                 sum_j = np.dot(A[i, :], x) - A[i, i] * x[i]
                 x_new[i] = (b[i] - sum_j) / A[i, i]
 
+            prev_error = error
             error = np.linalg.norm(x_new - x, ord=np.inf)
+            
+            # Divergence detection: 5 consecutive growing errors
+            if k > 0 and error > prev_error:
+                growing_error_count += 1
+            else:
+                growing_error_count = 0
+            
+            if growing_error_count >= 5:
+                diverged = True
+
             self._steps.append(NumericalStep(
                 step_idx=k,
                 value=float(error),
@@ -186,7 +275,7 @@ class JacobiSolver(Solver):
 
             x = x_new.copy()  # Replace ALL at once (Jacobi rule)
 
-            if error < tol:
+            if error < tol or diverged:
                 break
 
         return SimulationData(
@@ -196,9 +285,35 @@ class JacobiSolver(Solver):
             metadata={
                 "iterations": len(self._steps),
                 "final_error": float(error) if self._steps else 0.0,
-                "converged": bool(error < tol) if self._steps else True
+                "converged": bool(error < tol and not diverged) if self._steps else True,
+                "reordered": reordered,
+                "diverged": diverged
             }
         )
 
     def get_steps(self) -> List[NumericalStep]:
         return self._steps
+
+
+class NetworkSolver:
+    """
+    A high-level wrapper for linear system solvers, primarily used by the GUI.
+    Defaults to using Gauss-Seidel iteration.
+    """
+    def __init__(self):
+        self.solver = GaussSeidelSolver()
+
+    def solve(self, **kwargs: Any) -> SimulationData:
+        # Map GUI-style arguments to solver-style arguments
+        if "matrix" in kwargs and "A" not in kwargs:
+            kwargs["A"] = kwargs.pop("matrix")
+        if "vector" in kwargs and "b" not in kwargs:
+            kwargs["b"] = kwargs.pop("vector")
+            
+        data = self.solver.solve(**kwargs)
+        
+        # Ensure 'solution' is in metadata for GUI compatibility
+        if "solution" not in data.metadata:
+            data.metadata["solution"] = data.y_data
+            
+        return data
