@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(gemini:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 5 python:*)"
+    ]
+  }
+}
