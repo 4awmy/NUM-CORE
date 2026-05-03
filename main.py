@@ -1,6 +1,9 @@
 import sys
 import argparse
+import os
+import matplotlib.pyplot as plt
 from rich.console import Console
+
 from rich.panel import Panel
 from rich.prompt import IntPrompt
 from rich.align import Align
@@ -64,7 +67,13 @@ def main():
     Main entry point for the NUM-CORE application.
     Parses arguments and launches the chosen interface.
     """
+    # Register custom Matplotlib style for True Black theme
+    style_path = os.path.join(os.path.dirname(__file__), "numcore_gui", "styles", "numcore_black.mplstyle")
+    if os.path.exists(style_path):
+        plt.style.use(style_path)
+
     parser = argparse.ArgumentParser(
+
         description="NUM-CORE: A Professional Numerical Computation Suite",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -100,8 +109,11 @@ Examples:
         print("\n[SYSTEM] Interrupted by user. Exiting...")
         sys.exit(0)
     except Exception as e:
-        print(f"[CRITICAL ERROR] {str(e)}")
+        import traceback
+        print(f"\n[CRITICAL ERROR] {str(e)}")
+        traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

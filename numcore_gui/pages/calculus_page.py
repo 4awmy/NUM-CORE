@@ -2,8 +2,11 @@ import customtkinter as ctk
 import numpy as np
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData
+from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.parser import SymbolicParser
+from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.calculus_engine import (
     TrapezoidalSolver,
     SimpsonsRuleSolver,
@@ -11,17 +14,21 @@ from numcore_engine.solvers.calculus_engine import (
     GaussianQuadratureSolver,
     NumericalDifferentiationSolver
 )
+from numcore_engine.solvers.comparison import ComparisonRunner
+from numcore_gui.smart_solver_panel import SmartSolverPanel
+
+from numcore_gui.equation_input import EquationInputWidget
 
 class CalculusPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 3: Numerical Calculus", font=ctk.CTkFont(size=18, weight="bold"))
@@ -49,11 +56,9 @@ class CalculusPage(ctk.CTkFrame):
         self.method_menu.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Equation
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., sin(x)")
-        self.func_entry.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.func_entry.insert(0, "x**2")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="ew")
+        self.func_input.set_expression("x**2")
 
         # Range / Point
         self.range_label = ctk.CTkLabel(self.input_frame, text="Range [a, b]:")
@@ -70,34 +75,46 @@ class CalculusPage(ctk.CTkFrame):
         self.n_entry.insert(0, "10")
 
         self.solve_button = ctk.CTkButton(self.input_frame, text="Execute Mission", command=self.solve_action)
-        self.solve_button.grid(row=9, column=0, padx=20, pady=20)
+        self.solve_button.grid(row=9, column=0, padx=20, pady=(20, 10))
 
-        # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
-        self.results_panel.grid(row=10, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.smart_solve_button = ctk.CTkButton(
+            self.input_frame, 
+            text="Smart Solve (Compare)", 
+            command=self.smart_solve_action,
+            fg_color="#1f538d",
+            hover_color="#14375e"
+        )
+        self.smart_solve_button.grid(row=10, column=0, padx=20, pady=(0, 20))
 
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
         self.error_label.grid(row=11, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
-        
-        self.viz_label = ctk.CTkLabel(self.viz_frame, text="Function Visualization", font=ctk.CTkFont(size=16, weight="bold"))
-        self.viz_label.pack(pady=20)
+        self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
+        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
+        self.viz_frame.grid_columnconfigure(0, weight=1)
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
-        self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
+        # Plot Container
+        self.plot_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.plot_container.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="nsew")
+        self.plot_container.grid_columnconfigure(0, weight=1)
+        self.plot_container.grid_rowconfigure(0, weight=1)
+
+        self.viz_label = ctk.CTkLabel(self.plot_container, text="Function Visualization", font=ctk.CTkFont(size=16, weight="bold"))
+        self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10))
+
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
+
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+
 
         # Solvers mapping
         self.solvers = {
@@ -134,13 +151,16 @@ class CalculusPage(ctk.CTkFrame):
         """Triggers the numerical calculus solver and updates the plot."""
         self.error_label.configure(text="")
         method = self.method_menu.get()
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
         
         if not expression:
             self.error_label.configure(text="Error: Expression is required.")
             return
 
         try:
+            import time
+            start_time = time.perf_counter()
+
             f = SymbolicParser.parse_expression(expression)
             solver = self.solvers[method]
             
@@ -148,11 +168,13 @@ class CalculusPage(ctk.CTkFrame):
                 x = float(self.range_entry.get())
                 h = float(self.n_entry.get())
                 data = solver.solve(f=f, x=x, h=h, method="central")
+                steps = solver.get_steps()
                 
-                res = data.metadata.get("derivative")
-                self.result_label.configure(text=f"Derivative at x={x}: {res:.6f}")
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new derivative tangent plot
+                res = data.metadata.get("derivative")
                 self.plot_manager.plot_derivative_tangent(expression, x, res)
                 
             elif method == "Gaussian Quadrature":
@@ -160,9 +182,10 @@ class CalculusPage(ctk.CTkFrame):
                 a, b = map(float, r_str.split(","))
                 pts = int(self.n_entry.get())
                 data = solver.solve(f=f, a=a, b=b, points=pts)
+                steps = solver.get_steps()
                 
-                res = data.metadata.get("total_integral")
-                self.result_label.configure(text=f"Integral from {a} to {b}: {res:.6f}")
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new integration area plot
                 self.plot_manager.plot_integration_area(expression, a, b, method)
@@ -177,11 +200,58 @@ class CalculusPage(ctk.CTkFrame):
                     kwargs["method"] = "1/3" if "1/3" in method else "3/8"
                 
                 data = solver.solve(**kwargs)
-                res = data.metadata.get("total_integral")
-                self.result_label.configure(text=f"Integral from {a} to {b}: {res:.6f}")
+                steps = solver.get_steps()
+                
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new integration area plot
                 self.plot_manager.plot_integration_area(expression, a, b, method)
 
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Runs all compatible calculus solvers and shows comparison."""
+        self.error_label.configure(text="")
+        expression = self.func_input.get_expression()
+        method = self.method_menu.get()
+
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            f = SymbolicParser.parse_expression(expression)
+            
+            # Filter solvers based on current mode (Integration or Differentiation)
+            if method == "Differentiation":
+                # Only one differentiation solver currently, but we can compare methods if we had more
+                # For now, let's just compare integration methods if we are in integration mode
+                self.error_label.configure(text="Smart Solve is currently optimized for Integration methods.")
+                return
+
+            # Integration solvers
+            integration_solvers = {k: v for k, v in self.solvers.items() if k != "Differentiation"}
+            runner = ComparisonRunner(integration_solvers)
+
+            r_str = self.range_entry.get()
+            a, b = map(float, r_str.split(","))
+            n = int(self.n_entry.get())
+
+            kwargs = {"f": f, "a": a, "b": b, "n": n, "points": 3} # Default points for Gaussian
+            
+            comparison_result = runner.run_comparison(**kwargs)
+            
+            # Show SmartSolverPanel
+            SmartSolverPanel(self, comparison_result)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

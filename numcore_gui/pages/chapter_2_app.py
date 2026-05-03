@@ -1,17 +1,18 @@
 import customtkinter as ctk
 from numcore_gui.visualization import PlotManager
 from numcore_engine.solvers.network_solver import NetworkSolver
+from numcore_gui.theme import BLACK, PANEL, BORDER
 
 class Chapter2AppPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Problem & Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Circuit Analysis", font=ctk.CTkFont(size=18, weight="bold"))
@@ -54,7 +55,7 @@ class Chapter2AppPage(ctk.CTkFrame):
         self.solve_button.grid(row=6, column=0, padx=20, pady=20)
 
         # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
+        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
         self.results_panel.grid(row=7, column=0, padx=20, pady=10, sticky="nsew")
         self.results_panel.grid_columnconfigure(0, weight=1)
         
@@ -65,16 +66,17 @@ class Chapter2AppPage(ctk.CTkFrame):
         self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         
         self.viz_label = ctk.CTkLabel(self.viz_frame, text="Current Distribution", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.pack(pady=20)
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
         self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
         
         self.plot_manager = PlotManager(self.plot_placeholder)
+
         self.solver = NetworkSolver()
 
     def solve_action(self):
@@ -82,6 +84,9 @@ class Chapter2AppPage(ctk.CTkFrame):
         vector_str = self.vector_entry.get()
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             # Parse matrix
             matrix = [[float(x) for x in row.split(",")] for row in matrix_str.split("\n") if row.strip()]
             # Parse vector
@@ -89,19 +94,24 @@ class Chapter2AppPage(ctk.CTkFrame):
             
             data = self.solver.solve(matrix=matrix, vector=vector)
             
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Circuit Analysis Solver", comp_time)
+
             solution = data.metadata.get("solution")
             
-            # Create plot data for branch currents
-            plot_data = SimulationData(
+            # Use plot_bar for solution vector
+            labels = [f"I{i+1}" for i in range(len(solution))]
+            self.plot_manager.plot_bar(
+                x=labels, 
+                y=solution, 
                 title="Branch Current Distribution",
-                x_data=list(range(1, len(solution) + 1)),
-                y_data=solution,
-                metadata={"scatter_x": list(range(1, len(solution) + 1)), "scatter_y": solution}
+                xlabel="Current Branch",
+                ylabel="Current (A)"
             )
-            self.plot_manager.plot_static(plot_data)
-            self.plot_manager.ax.set_xlabel("Branch Index")
-            self.plot_manager.ax.set_ylabel("Current (A)")
-            self.plot_manager.canvas.draw()
             
             sol_text = "\n".join([f"I{i+1} = {val:.4f} A" for i, val in enumerate(solution)])
             

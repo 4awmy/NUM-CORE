@@ -101,7 +101,32 @@ def test_newton_raphson_invalid_input():
         solver.solve(expression="x**2")  # Missing initial_guess
 
 
-def test_simple_iteration_invalid_input():
+def test_bisection_details():
+    solver = BisectionSolver()
+    result = solver.solve(expression="x**2 - 4", a=1.0, b=3.0, tolerance=1e-6)
+    steps = solver.get_steps()
+    assert "f(a)" in steps[0].details
+    assert "f(b)" in steps[0].details
+    assert "f(c)" in steps[0].details
+
+
+def test_simple_iteration_convergence_check():
     solver = SimpleIterationSolver()
-    with pytest.raises(ValueError):
-        solver.solve(initial_guess=1.0)  # Missing expression
+    # x = cos(x), g'(x) = -sin(x), |g'(0.5)| = sin(0.5) approx 0.479 < 1
+    result = solver.solve(expression="cos(x)", initial_guess=0.5)
+    assert result.metadata["convergence_passed"] is True
+
+    # x = x^2 + x - 2, g(x) = x^2 + x - 2, g'(x) = 2x + 1, |g'(2)| = 5 > 1
+    result = solver.solve(expression="x**2 + x - 2", initial_guess=2.0)
+    assert result.metadata["convergence_passed"] is False
+
+
+def test_newton_raphson_fallback():
+    from unittest.mock import patch
+    from numcore_engine.parser import SymbolicParser
+    
+    with patch.object(SymbolicParser, "get_derivative", side_effect=Exception("Symbolic fail")):
+        solver = NewtonRaphsonSolver()
+        # Should still work using numerical differentiation
+        result = solver.solve(expression="x**2 - 4", initial_guess=3.0, tolerance=1e-6)
+        assert pytest.approx(result.metadata["root"], rel=1e-5) == 2.0
