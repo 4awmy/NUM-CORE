@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
@@ -7,12 +8,16 @@ from rich.prompt import Prompt, FloatPrompt, IntPrompt
 from rich.table import Table
 from rich.text import Text
 from rich.align import Align
+from rich import box
 
 from numcore_engine.solvers import (
     NewtonRaphsonSolver,
     SimpleIterationSolver,
     GaussSeidelSolver,
     JacobiSolver,
+    EulerSolver,
+    RungeKuttaSolver,
+    LeastSquaresSolver,
 )
 from numcore_engine.solvers.calculus_engine import (
     InterpolationSolver,
@@ -29,8 +34,22 @@ class NumericalCLI:
     def __init__(self):
         self.console = Console()
         self.formatter = NumericalFormatter()
+        self.last_steps: List[Any] = []
         self.theme_color = "cyan"
         self.accent_color = "bold magenta"
+
+    def get_steps_from_result(self) -> List[Any]:
+        """Return the steps from the last executed solver."""
+        return self.last_steps
+
+    def ask_export(self, steps: List[Any], method_name: str):
+        """Offer CSV export for the given steps."""
+        if not steps:
+            return
+            
+        if Prompt.ask("\nExport steps to CSV? (y/n)", choices=["y", "n"], default="n") == "y":
+            filename = self.formatter.export_steps_to_csv(steps, method_name)
+            self.console.print(f"[bold green]Successfully exported to {filename}[/bold green]")
 
     def clear_screen(self):
         """Clear the terminal screen."""
@@ -79,8 +98,9 @@ class NumericalCLI:
             
             options = [
                 "Root Finding (Newton-Raphson, Simple Iteration)",
-                "Linear Systems (Gauss-Seidel)",
+                "Linear Systems (Gauss-Seidel, Jacobi)",
                 "Calculus (Interpolation, Integration)",
+                "ODE & Regression (Euler, RK4, Least Squares)",
                 "Exit"
             ]
             self.display_menu_options(options)
@@ -98,8 +118,174 @@ class NumericalCLI:
             elif choice == 3:
                 self.calculus_menu()
             elif choice == 4:
+                self.ode_regression_menu()
+            elif choice == 5:
                 self.console.print("[bold yellow]Exiting NUM-CORE. Goodbye![/bold yellow]")
                 break
+
+    def ode_regression_menu(self):
+        """ODE and Regression submenu."""
+        while True:
+            self.clear_screen()
+            self.display_header("ODE & Regression", "Solve Differential Equations and Fit Data")
+            
+            options = [
+                "Euler's Method (ODE)",
+                "Runge-Kutta Method (RK4)",
+                "Least Squares Regression",
+                "Back to Main Menu"
+            ]
+            self.display_menu_options(options)
+            
+            choice = IntPrompt.ask(
+                "Enter your choice",
+                choices=[str(i) for i in range(1, len(options) + 1)],
+                show_choices=False
+            )
+
+            if choice == 1:
+                self.run_euler()
+            elif choice == 2:
+                self.run_rk4()
+            elif choice == 3:
+                self.run_least_squares()
+            elif choice == 4:
+                break
+
+    def run_euler(self):
+        """Run Euler's method solver."""
+        self.clear_screen()
+        self.display_header("Euler's Method", "First-order ODE Solver")
+        
+        self.console.print(Panel(
+            "Euler's method is the most basic numerical procedure for solving ordinary differential equations (ODEs). "
+            "It uses the slope at the current point to predict the next value.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = EulerSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_euler_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Euler")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_rk4(self):
+        """Run RK4 method solver."""
+        self.clear_screen()
+        self.display_header("Runge-Kutta (RK4)", "High-accuracy ODE Solver")
+        
+        self.console.print(Panel(
+            "The fourth-order Runge-Kutta method (RK4) is a highly accurate numerical technique for solving ODEs. "
+            "It uses four slope estimates per step to achieve much better precision than Euler's method.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = RungeKuttaSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_rk4_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "RK4")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_least_squares(self):
+        """Run Least Squares regression solver."""
+        self.clear_screen()
+        self.display_header("Least Squares", "Linear Regression (y = mx + c)")
+        
+        self.console.print(Panel(
+            "Least Squares regression finds the best-fitting line through a set of data points by "
+            "minimizing the sum of the squares of the vertical deviations from each data point to the line.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            x_points = [1.0, 2.0, 3.0, 4.0, 5.0]
+            y_points = [2.1, 3.9, 6.2, 8.1, 10.1]
+            self.console.print(f"[bold cyan]Example: Linear trend with noise[/bold cyan]")
+            self.console.print(f"X: {x_points}")
+            self.console.print(f"Y: {y_points}")
+        else:
+            x_str = Prompt.ask("Enter x points (space separated)")
+            y_str = Prompt.ask("Enter y points (space separated)")
+            try:
+                x_points = [float(x) for x in x_str.split()]
+                y_points = [float(y) for y in y_str.split()]
+            except ValueError:
+                self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+                return
+
+        solver = LeastSquaresSolver()
+        try:
+            result = solver.solve(x_points=x_points, y_points=y_points)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_least_squares_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Equation: {result.metadata['equation']}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Least-Squares")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
 
     def root_finding_menu(self):
         """Root finding submenu."""
@@ -164,14 +350,15 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
-            steps = solver.get_steps()
-            self.formatter.display_newton_raphson_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_newton_raphson_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Newton-Raphson")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -214,14 +401,15 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
-            steps = solver.get_steps()
-            self.formatter.display_simple_iteration_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_simple_iteration_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Simple Iteration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -236,6 +424,7 @@ class NumericalCLI:
             options = [
                 "Gauss-Seidel Method",
                 "Jacobi Method",
+                "Compare Both Methods",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -251,7 +440,80 @@ class NumericalCLI:
             elif choice == 2:
                 self.run_jacobi()
             elif choice == 3:
+                self.run_comparison()
+            elif choice == 4:
                 break
+
+    def run_comparison(self):
+        """Run both Jacobi and Gauss-Seidel on the same input and compare."""
+        self.clear_screen()
+        self.display_header("Method Comparison", "Jacobi vs Gauss-Seidel")
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            matrix = [[4.0, -1.0, -1.0], [-1.0, 4.0, -1.0], [-1.0, -1.0, 4.0]]
+            b = [3.0, 2.0, 1.0]
+            x0 = [0.0, 0.0, 0.0]
+            tol = 1e-6
+            max_iter = 100
+        else:
+            n = IntPrompt.ask("Enter number of equations", default=3)
+            matrix = []
+            for i in range(n):
+                while True:
+                    row_str = Prompt.ask(f"Enter coefficients for equation {i+1} (space separated)")
+                    try:
+                        row = [float(x) for x in row_str.split()]
+                        if len(row) != n: continue
+                        matrix.append(row)
+                        break
+                    except ValueError: pass
+            
+            b_str = Prompt.ask("Enter constants b (space separated)")
+            b = [float(x) for x in b_str.split()]
+            
+            initial_guess_str = Prompt.ask("Enter initial guess (space separated)", default=" ".join(["0"]*n))
+            x0 = [float(x) for x in initial_guess_str.split()]
+            
+            tol = FloatPrompt.ask("Enter tolerance", default=1e-6)
+            max_iter = IntPrompt.ask("Enter max iterations", default=100)
+
+        jacobi = JacobiSolver()
+        gs = GaussSeidelSolver()
+
+        try:
+            res_j = jacobi.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+            res_gs = gs.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
+
+            table = Table(title="Solver Comparison", box=box.ROUNDED)
+            table.add_column("Metric", style="cyan")
+            table.add_column("Jacobi", justify="center")
+            table.add_column("Gauss-Seidel", justify="center")
+            table.add_column("Winner", justify="center", style="bold green")
+
+            iter_winner = "Gauss-Seidel" if res_gs.metadata['iterations'] < res_j.metadata['iterations'] else "Jacobi"
+            if res_gs.metadata['iterations'] == res_j.metadata['iterations']: iter_winner = "Tie"
+
+            table.add_row("Iterations", str(res_j.metadata['iterations']), str(res_gs.metadata['iterations']), iter_winner)
+            table.add_row("Final Error", f"{res_j.metadata['final_error']:.4e}", f"{res_gs.metadata['final_error']:.4e}", "N/A")
+            table.add_row("Converged", str(res_j.metadata['converged']), str(res_gs.metadata['converged']), "N/A")
+            
+            self.console.print(table)
+            
+            self.console.print("\n[bold]Final Solutions:[/bold]")
+            self.console.print(f"Jacobi: {res_j.y_data}")
+            self.console.print(f"Gauss-Seidel: {res_gs.y_data}")
+
+            # Store Gauss-Seidel steps as primary for export comparison
+            self.last_steps = gs.get_steps()
+            self.ask_export(self.get_steps_from_result(), "Comparison")
+
+        except Exception as e:
+            self.console.print(f"[bold red]Error during comparison: {str(e)}[/bold red]")
+
+        Prompt.ask("\nPress Enter to return to menu")
+
 
     def run_gauss_seidel(self):
         """Run Gauss-Seidel solver."""
@@ -328,13 +590,14 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
-            steps = solver.get_steps()
-            self.formatter.display_linear_steps(steps, method_name="Gauss-Seidel")
+            self.last_steps = solver.get_steps()
+            self.formatter.display_linear_steps(self.last_steps, method_name="Gauss-Seidel")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Gauss-Seidel")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -416,8 +679,8 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
-            steps = solver.get_steps()
-            self.formatter.display_linear_steps(steps, method_name="Jacobi")
+            self.last_steps = solver.get_steps()
+            self.formatter.display_linear_steps(self.last_steps, method_name="Jacobi")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']} | "
@@ -425,9 +688,10 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Jacobi")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
-
+        
         Prompt.ask("\nPress Enter to return to menu")
 
     def calculus_menu(self):
@@ -502,13 +766,14 @@ class NumericalCLI:
                 y_points=y_points,
                 target_x=target_x
             )
-            steps = solver.get_steps()
-            self.formatter.display_interpolation_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_interpolation_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Interpolated values: {result.y_data}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Interpolation")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -560,13 +825,14 @@ class NumericalCLI:
                 y_points=y_points,
                 method=method
             )
-            steps = solver.get_steps()
-            self.formatter.display_integration_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_integration_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Total Integral: {result.metadata['total_integral']:.8f}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
+            self.ask_export(self.get_steps_from_result(), "Integration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         

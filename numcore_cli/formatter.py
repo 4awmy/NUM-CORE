@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 
 from rich.console import Console
 from rich.table import Table
@@ -60,6 +60,134 @@ class NumericalFormatter:
     def display_steps(steps: List[NumericalStep], title: Optional[str] = None) -> None:
         """Display the generic step table."""
         Console().print(NumericalFormatter.format_steps(steps, title))
+
+    # ──────────────────────────────────────────────────────────────
+    # Bisection
+    # ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def display_bisection_steps(steps: List[NumericalStep]) -> None:
+        """
+        Iter | a | b | f(a) | f(b) | c | f(c) | |Error|
+        """
+        console = Console()
+        table = Table(
+            title="Bisection Method — Step-by-Step",
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            border_style="cyan",
+        )
+        table.add_column("Iter", justify="center", style="bold white")
+        table.add_column("a", justify="center")
+        table.add_column("b", justify="center")
+        table.add_column("f(a)", justify="center", style="green")
+        table.add_column("f(b)", justify="center", style="green")
+        table.add_column("c (mid)", justify="center", style="bold yellow")
+        table.add_column("f(c)", justify="center", style="bold green")
+        table.add_column("|Error|", justify="center", style="magenta")
+
+        for step in steps:
+            table.add_row(
+                str(step.step_idx + 1),
+                f"{step.details.get('a', 0):.6f}",
+                f"{step.details.get('b', 0):.6f}",
+                f"{step.details.get('f(a)', 0):.6f}",
+                f"{step.details.get('f(b)', 0):.6f}",
+                f"{step.details.get('c', 0):.6f}",
+                f"{step.details.get('f(c)', 0):.6f}",
+                f"{step.error:.4e}" if step.error is not None else "--",
+            )
+        console.print(table)
+
+    # ──────────────────────────────────────────────────────────────
+    # Secant
+    # ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def display_secant_steps(steps: List[NumericalStep]) -> None:
+        """
+        Iter | x0 | x1 | f(x0) | f(x1) | x2 | |Error|
+        """
+        console = Console()
+        table = Table(
+            title="Secant Method — Step-by-Step",
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            border_style="cyan",
+        )
+        table.add_column("Iter", justify="center", style="bold white")
+        table.add_column("x_n-1", justify="center")
+        table.add_column("x_n", justify="center")
+        table.add_column("f(x_n-1)", justify="center", style="green")
+        table.add_column("f(x_n)", justify="center", style="green")
+        table.add_column("x_n+1", justify="center", style="bold yellow")
+        table.add_column("|Error|", justify="center", style="magenta")
+
+        for step in steps:
+            table.add_row(
+                str(step.step_idx + 1),
+                f"{step.details.get('x0', 0):.6f}",
+                f"{step.details.get('x1', 0):.6f}",
+                f"{step.details.get('f(x0)', 0):.6f}",
+                f"{step.details.get('f(x1)', 0):.6f}",
+                f"{step.details.get('x2', 0):.6f}",
+                f"{step.error:.4e}" if step.error is not None else "--",
+            )
+        console.print(table)
+
+    # ──────────────────────────────────────────────────────────────
+    # Difference Tables
+    # ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def display_difference_table(steps: List[NumericalStep], title: str = "Forward Difference Table") -> None:
+        """
+        i | x_i | y_i | Δy_i | Δ²y_i | ...
+        """
+        if not steps:
+            return
+        
+        console = Console()
+        table = Table(
+            title=title,
+            show_header=True,
+            header_style="bold cyan",
+            box=box.ROUNDED,
+            border_style="cyan",
+        )
+        
+        table.add_column("i", justify="center", style="bold white")
+        table.add_column("x_i", justify="center")
+        table.add_column("y_i", justify="center", style="green")
+        
+        # Find max difference order
+        max_order = 0
+        for step in steps:
+            for key in step.details.keys():
+                if key.startswith("diff_") or key.startswith("dd_"):
+                    order = int(key.split("_")[1])
+                    max_order = max(max_order, order)
+        
+        prefix = "Δ" if "diff_1" in steps[0].details else "f["
+        for j in range(1, max_order + 1):
+            col_name = f"{prefix}^{j}y_i" if prefix == "Δ" else f"Order {j}"
+            table.add_column(col_name, justify="center", style="blue")
+
+        for step in steps:
+            row = [
+                str(step.step_idx),
+                f"{step.details.get('x', 0):.4f}",
+                f"{step.details.get('y', 0):.4f}",
+            ]
+            for j in range(1, max_order + 1):
+                key = f"diff_{j}" if prefix == "Δ" else f"dd_{j}"
+                val = step.details.get(key)
+                row.append(f"{val:.4f}" if val is not None else "")
+            table.add_row(*row)
+            
+        console.print(table)
 
     # ──────────────────────────────────────────────────────────────
     # Newton-Raphson
@@ -235,12 +363,137 @@ class NumericalFormatter:
 
         console.print(table)
 
+    @staticmethod
+    def display_euler_steps(steps: List[NumericalStep]) -> None:
+        """
+        Iter | x | y | f(x,y)
+        """
+        console = Console()
+        table = Table(
+            title="Euler's Method — Step-by-Step",
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            border_style="cyan",
+        )
+        table.add_column("Iter", justify="center", style="bold white")
+        table.add_column("x", justify="center")
+        table.add_column("y", justify="center", style="bold yellow")
+        table.add_column("f(x,y)", justify="center", style="green")
+
+        for step in steps:
+            table.add_row(
+                str(step.step_idx),
+                f"{step.details.get('x', 0):.6f}",
+                f"{step.details.get('y', 0):.6f}",
+                f"{step.details.get('f(x,y)', 0):.6f}",
+            )
+        
+        console.print(table)
+
+    @staticmethod
+    def display_rk4_steps(steps: List[NumericalStep]) -> None:
+        """
+        Iter | x | y | k1 | k2 | k3 | k4
+        """
+        console = Console()
+        table = Table(
+            title="Runge-Kutta (RK4) — Step-by-Step",
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            border_style="cyan",
+        )
+        table.add_column("Iter", justify="center", style="bold white")
+        table.add_column("x", justify="center")
+        table.add_column("y", justify="center", style="bold yellow")
+        table.add_column("k1", justify="center")
+        table.add_column("k2", justify="center")
+        table.add_column("k3", justify="center")
+        table.add_column("k4", justify="center")
+
+        for step in steps:
+            table.add_row(
+                str(step.step_idx),
+                f"{step.details.get('x', 0):.6f}",
+                f"{step.details.get('y', 0):.6f}",
+                f"{step.details.get('k1', 0):.6f}" if 'k1' in step.details else "—",
+                f"{step.details.get('k2', 0):.6f}" if 'k2' in step.details else "—",
+                f"{step.details.get('k3', 0):.6f}" if 'k3' in step.details else "—",
+                f"{step.details.get('k4', 0):.6f}" if 'k4' in step.details else "—",
+            )
+        
+        console.print(table)
+
+    @staticmethod
+    def display_least_squares_steps(steps: List[NumericalStep]) -> None:
+        """
+        Displays regression coefficients.
+        """
+        console = Console()
+        if not steps:
+            return
+            
+        details = steps[0].details
+        table = Table(
+            title="Least Squares Regression — Summary",
+            show_header=True,
+            header_style="bold cyan",
+            box=box.SIMPLE_HEAD,
+            border_style="cyan",
+        )
+        table.add_column("Metric", justify="left", style="bold white")
+        table.add_column("Value", justify="right", style="bold yellow")
+
+        table.add_row("Slope (m)", f"{details.get('slope', 0):.6f}")
+        table.add_row("Intercept (c)", f"{details.get('intercept', 0):.6f}")
+        table.add_row("Σx", f"{details.get('sum_x', 0):.6f}")
+        table.add_row("Σy", f"{details.get('sum_y', 0):.6f}")
+        table.add_row("Σx²", f"{details.get('sum_xx', 0):.6f}")
+        table.add_row("Σxy", f"{details.get('sum_xy', 0):.6f}")
+        
+        console.print(table)
+
     # ──────────────────────────────────────────────────────────────
     # Numerical Integration
     # ──────────────────────────────────────────────────────────────
 
     @staticmethod
-    def display_integration_steps(steps: List[NumericalStep]) -> None:
+    def display_integration_table(steps: List[NumericalStep], title: str = "Integration Table") -> None:
+        """
+        i | x_i | y_i | Weight | Weighted y_i
+        """
+        if not steps:
+            return
+        
+        console = Console()
+        table = Table(
+            title=title,
+            show_header=True,
+            header_style="bold cyan",
+            box=box.ROUNDED,
+            border_style="cyan",
+        )
+        
+        table.add_column("i", justify="center", style="bold white")
+        table.add_column("x_i", justify="center")
+        table.add_column("y_i", justify="center", style="green")
+        table.add_column("Weight", justify="center", style="blue")
+        table.add_column("Weighted y_i", justify="center", style="bold yellow")
+
+        for step in steps:
+            table.add_row(
+                str(step.step_idx),
+                f"{step.details.get('x', 0):.4f}",
+                f"{step.details.get('y', 0):.4f}",
+                str(step.details.get('weight', 1)),
+                f"{step.details.get('weighted_y', 0):.4f}",
+            )
+            
+        console.print(table)
+
+    @staticmethod
+    def display_integration_steps(steps: List[NumericalStep], metadata: Optional[Dict[str, Any]] = None) -> None:
         """
         Shows integration formula breakdown:
         Method | h | n | Result
@@ -248,31 +501,84 @@ class NumericalFormatter:
         if not steps:
             return
         console = Console()
-        step    = steps[0]
-        method  = step.details.get("method", "Unknown")
-        h       = step.details.get("h", "?")
-        n       = step.details.get("n", "?")
-        result  = step.value
+        
+        # If metadata is provided, use it. Otherwise try to get from first step.
+        if metadata:
+            method = metadata.get("method", "Unknown")
+            h = metadata.get("h_value", "?")
+            n = metadata.get("n", "?")
+            weighted_sum_str = metadata.get("weighted_sum_str", "")
+            result = metadata.get("total_integral", 0.0)
+        else:
+            step = steps[0]
+            method = step.details.get("method", "Unknown")
+            h = step.details.get("h", "?")
+            n = step.details.get("n", "?")
+            weighted_sum_str = step.details.get("weighted_sum", "")
+            result = step.value
 
         # Print the formula used
         formula_map = {
-                "Trapezoidal Rule":    "I ~= (h/2) * [f(x0) + 2*sum(f(xi)) + f(xn)]",
+            "Trapezoidal Rule":    "I ~= (h/2) * [f(x0) + 2*sum(f(xi)) + f(xn)]",
             "Simpson's 1/3 Rule":  "I ~= (h/3) * [f(x0) + 4*sum(f(x_odd)) + 2*sum(f(x_even)) + f(xn)]",
             "Simpson's 3/8 Rule":  "I ~= (3h/8) * [f(x0) + 3*sum(f(x_3k+-1,2)) + 2*sum(f(x_3k)) + f(xn)]",
         }
         formula = formula_map.get(method, "See method definition")
 
-        summary = (
+        content = (
             f"[bold]Method:[/bold]   {method}\n"
             f"[bold]Formula:[/bold]  {formula}\n"
-            f"[bold]h (step):[/bold] {h:.6f}" if isinstance(h, float) else f"[bold]h:[/bold] {h}"
+            f"[bold]Step h:[/bold]   {h:.6f}\n" if isinstance(h, (float, int)) else f"[bold]Step h:[/bold]   {h}\n"
         )
+        
+        if n != "?":
+            content += f"[bold]Intervals n:[/bold] {n}\n"
+            
+        if weighted_sum_str:
+            content += f"\n[bold]Weighted Sum:[/bold]\n{weighted_sum_str}\n"
+            
+        content += f"\n[bold green]Result = {result:.8f}[/bold green]"
+
         console.print(Panel(
-            f"[bold]Method:[/bold]   {method}\n"
-            f"[bold]Formula:[/bold]  {formula}\n"
-            f"[bold]Step h:[/bold]   {h:.6f}\n"
-            f"[bold]Intervals n:[/bold] {n}\n\n"
-            f"[bold green]Result = {result:.8f}[/bold green]",
+            content,
             title="[bold cyan]Integration — Step Breakdown[/bold cyan]",
             border_style="cyan",
         ))
+
+    @staticmethod
+    def export_steps_to_csv(steps: List[NumericalStep], method_name: str, filename: Optional[str] = None) -> str:
+        """
+        Exports numerical steps to a CSV file.
+        Columns: step_idx, value, error, plus all keys found in 'details'.
+        """
+        import csv
+        from datetime import datetime
+
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"results_{method_name.lower().replace(' ', '_')}_{timestamp}.csv"
+
+        # Collect all unique detail keys
+        detail_keys = sorted({k for step in steps for k in step.details.keys()})
+        fieldnames = ["step_idx", "value", "error"] + detail_keys
+
+        with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for step in steps:
+                row = {
+                    "step_idx": step.step_idx,
+                    "value": step.value,
+                    "error": step.error if step.error is not None else "",
+                }
+                # Add details
+                for key in detail_keys:
+                    val = step.details.get(key, "")
+                    # Handle list values (like in linear systems) by converting to string
+                    if isinstance(val, list):
+                        row[key] = str(val)
+                    else:
+                        row[key] = val
+                writer.writerow(row)
+
+        return filename

@@ -8,11 +8,26 @@ class NumericalStep:
     value: float
     error: Optional[float] = None
     details: Dict[str, Any] = field(default_factory=dict)
+    check_name: Optional[str] = None
+    check_passed: Optional[bool] = None
 
 
 @dataclass(frozen=True)
-class SimulationData:
+class NumericalData:
     title: str
-    x_data: List[float]
-    y_data: List[float]
     metadata: Dict[str, Any] = field(default_factory=dict)
+    computation_time_ms: float = 0.0
+
+
+@dataclass(frozen=True)
+class SimulationData(NumericalData):
+    x_data: List[float] = field(default_factory=list)
+    y_data: List[float] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class ComparisonResult:
+    best_method: Optional[str]
+    results: List[NumericalData]
+    recommendation: str
+    all_diverged: bool = False
