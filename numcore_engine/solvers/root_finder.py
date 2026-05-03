@@ -60,7 +60,14 @@ class BisectionSolver:
                 step_idx=i,
                 value=c,
                 error=error,
-                details={"a": a, "b": b, "f(a)": fa, "f(b)": fb, "f(c)": fc},
+                details={
+                    "a": float(a),
+                    "b": float(b),
+                    "f(a)": float(fa),
+                    "f(b)": float(fb),
+                    "c": float(c),
+                    "f(c)": float(fc),
+                },
             )
             self._steps.append(step)
             x_history.append(float(i))
@@ -245,7 +252,13 @@ class SecantSolver:
                 step_idx=i,
                 value=x_next,
                 error=error,
-                details={"x0": x0, "x1": x1, "f(x1)": fx1},
+                details={
+                    "x0": float(x0),
+                    "x1": float(x1),
+                    "f(x0)": float(fx0),
+                    "f(x1)": float(fx1),
+                    "x2": float(x_next),
+                },
             )
             self._steps.append(step)
             x_history.append(float(i))

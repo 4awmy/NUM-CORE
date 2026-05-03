@@ -82,7 +82,9 @@ class LagrangeInterpolationSolver(Solver):
             y_data=result_y,
             metadata={
                 "method": "Lagrange",
-                "polynomial_str": get_polynomial_str()
+                "polynomial_str": get_polynomial_str(),
+                "target_x": x_data[0] if target_x is not None else None,
+                "interpolated_y": result_y[0] if target_x is not None else None
             }
         )
 
@@ -137,25 +139,24 @@ class NewtonDifferenceTableSolver(Solver):
             for i in range(n - j):
                 table[i, j] = table[i + 1, j - 1] - table[i, j - 1]
 
-        # Calculate divided difference table for metadata requirement
-        dd_table = np.zeros((n, n))
-        dd_table[:, 0] = y_points
-        import math
-        for j in range(1, n):
-            for i in range(n - j):
-                # f[x_i, ..., x_{i+j}] = Delta^j y_i / (j! * h^j)
-                dd_table[i, j] = table[i, j] / (math.factorial(j) * (h ** j))
-
         self._steps = []
-        for j in range(1, n):
+        for i in range(n):
+            row_diffs = {}
+            for j in range(1, n):
+                if i < n - j:
+                    row_diffs[f"diff_{j}"] = table[i, j]
+            
             self._steps.append(NumericalStep(
-                step_idx=j,
-                value=0.0,
+                step_idx=i,
+                value=y_points[i],
                 details={
-                    "description": f"Forward differences of order {j}",
-                    "differences": table[:n-j, j].tolist()
+                    "x": x_points[i],
+                    "y": y_points[i],
+                    **row_diffs
                 }
             ))
+
+        # Calculate divided difference table for metadata requirement
 
         # Coefficients for Newton Forward Interpolation are table[0, j] / (j! * h^j)
         # But often just the table[0, j] are called coefficients in this context
@@ -167,7 +168,7 @@ class NewtonDifferenceTableSolver(Solver):
             y_data=y_points.tolist(),
             metadata={
                 "difference_table": table.tolist(),
-                "dd_table": dd_table.tolist(),
+                "dd_table": table.tolist(),
                 "coefficients": coefficients,
                 "h": h
             }
@@ -226,17 +227,24 @@ class NewtonDividedDifferenceSolver(Solver):
             for i in range(n - j):
                 table[i, j] = (table[i + 1, j - 1] - table[i, j - 1]) / (x_points[i + j] - x_points[i])
 
-        coef = table[0, :].tolist()
         self._steps = []
-        for j in range(n):
+        for i in range(n):
+            row_diffs = {}
+            for j in range(1, n):
+                if i < n - j:
+                    row_diffs[f"dd_{j}"] = table[i, j]
+            
             self._steps.append(NumericalStep(
-                step_idx=j,
-                value=coef[j],
+                step_idx=i,
+                value=y_points[i],
                 details={
-                    "description": f"Order {j} divided difference coefficient",
-                    "indices": list(range(j + 1))
+                    "x": x_points[i],
+                    "y": y_points[i],
+                    **row_diffs
                 }
             ))
+
+        coef = table[0, :].tolist()
 
         def evaluate(x: float) -> float:
             res = coef[0]
@@ -266,7 +274,9 @@ class NewtonDividedDifferenceSolver(Solver):
             y_data=result_y,
             metadata={
                 "coefficients": coef,
-                "dd_table": table.tolist()
+                "dd_table": table.tolist(),
+                "target_x": x_data[0] if target_x is not None else None,
+                "interpolated_y": result_y[0] if target_x is not None else None
             }
         )
 
@@ -357,7 +367,11 @@ class LinearInterpolationSolver(Solver):
             title="Linear Interpolation",
             x_data=x_data,
             y_data=result_y,
-            metadata={"method": "Linear"}
+            metadata={
+                "method": "Linear",
+                "target_x": x_data[0] if target_x is not None else None,
+                "interpolated_y": result_y[0] if target_x is not None else None
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:
@@ -472,7 +486,9 @@ class CubicSplineSolver(Solver):
                 "a": a.tolist(),
                 "b": b.tolist(),
                 "c": c[:-1].tolist(),
-                "d": d.tolist()
+                "d": d.tolist(),
+                "target_x": x_data[0] if target_x is not None else None,
+                "interpolated_y": result_y[0] if target_x is not None else None
             }
         )
 
@@ -638,11 +654,19 @@ class TrapezoidalSolver(Solver):
         terms.append(f"{y_data[-1]:.4f}")
         weighted_sum_str = f"({h:.4f}/2) * [" + " + ".join(terms) + "]"
 
-        self._steps = [NumericalStep(
-            step_idx=1,
-            value=result,
-            details={"n": n, "h": h, "weighted_sum": weighted_sum_str}
-        )]
+        self._steps = []
+        for i in range(n + 1):
+            weight = 1 if (i == 0 or i == n) else 2
+            self._steps.append(NumericalStep(
+                step_idx=i,
+                value=y_data[i],
+                details={
+                    "x": x_data[i],
+                    "y": y_data[i],
+                    "weight": weight,
+                    "weighted_y": weight * y_data[i]
+                }
+            ))
 
         return SimulationData(
             title="Trapezoidal Rule",
@@ -714,13 +738,25 @@ class SimpsonOneThirdSolver(Solver):
         terms.append(f"{y_data[-1]:.4f}")
         weighted_sum_str = f"({h:.4f}/3) * [" + " + ".join(terms) + "]"
 
-        self._steps = [NumericalStep(
-            step_idx=1,
-            value=result,
-            details={"n": n, "h": h, "weighted_sum": weighted_sum_str},
-            check_name="n_even_check",
-            check_passed=True
-        )]
+        self._steps = []
+        for i in range(n + 1):
+            if i == 0 or i == n:
+                weight = 1
+            elif i % 2 != 0:
+                weight = 4
+            else:
+                weight = 2
+            
+            self._steps.append(NumericalStep(
+                step_idx=i,
+                value=y_data[i],
+                details={
+                    "x": x_data[i],
+                    "y": y_data[i],
+                    "weight": weight,
+                    "weighted_y": weight * y_data[i]
+                }
+            ))
 
         return SimulationData(
             title="Simpson's 1/3 Rule",
@@ -800,13 +836,25 @@ class SimpsonThreeEighthsSolver(Solver):
         result = (3 * h / 8) * sum_val
         weighted_sum_str = f"(3*{h:.4f}/8) * [" + " + ".join(terms) + "]"
 
-        self._steps = [NumericalStep(
-            step_idx=1,
-            value=result,
-            details={"n": n, "h": h, "weighted_sum": weighted_sum_str},
-            check_name="n_mod3_check",
-            check_passed=True
-        )]
+        self._steps = []
+        for i in range(n + 1):
+            if i == 0 or i == n:
+                weight = 1
+            elif i % 3 == 0:
+                weight = 2
+            else:
+                weight = 3
+            
+            self._steps.append(NumericalStep(
+                step_idx=i,
+                value=y_data[i],
+                details={
+                    "x": x_data[i],
+                    "y": y_data[i],
+                    "weight": weight,
+                    "weighted_y": weight * y_data[i]
+                }
+            ))
 
         return SimulationData(
             title="Simpson's 3/8 Rule",
