@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional
 from ..interfaces import Solver
 from ..models import NumericalStep, SimulationData
 from ..parser import SymbolicParser
-from .calculus_engine import NumericalDifferentiationSolver
 
 
 class BisectionSolver(Solver):
@@ -60,7 +59,7 @@ class BisectionSolver(Solver):
                 step_idx=i,
                 value=c,
                 error=error,
-                details={"a": a, "b": b, "f(a)": fa, "f(b)": fb, "f(c)": fc},
+                details={"a": a, "b": b, "f(c)": fc},
             )
             self._steps.append(step)
             x_history.append(float(i))
@@ -124,16 +123,8 @@ class NewtonRaphsonSolver(Solver):
 
         # Parse f(x) and its derivative f'(x)
         f = SymbolicParser.parse_expression(expression)
-        try:
-            derivative_expr = SymbolicParser.get_derivative(expression)
-            df = SymbolicParser.parse_expression(derivative_expr)
-        except Exception:
-            # Fallback to numerical differentiation using calculus_engine
-            diff_solver = NumericalDifferentiationSolver()
-
-            def df(x: float) -> float:
-                res = diff_solver.solve(f=f, x=x, h=1e-7, method="central")
-                return float(res.y_data[0])
+        derivative_expr = SymbolicParser.get_derivative(expression)
+        df = SymbolicParser.parse_expression(derivative_expr)
 
         # f(x₀)·f″(x₀) > 0 convergence check (sufficient condition)
         convergence_check_passed: Optional[bool] = None
@@ -329,20 +320,6 @@ class SimpleIterationSolver(Solver):
         # Parse g(x)
         g = SymbolicParser.parse_expression(expression)
 
-        # Convergence check: |g'(x)| < 1
-        convergence_passed = True
-        try:
-            dg_expr = SymbolicParser.get_derivative(expression)
-            dg = SymbolicParser.parse_expression(dg_expr)
-            if abs(dg(x_n)) >= 1:
-                convergence_passed = False
-        except Exception:
-            # Fallback to numerical derivative for check
-            diff_solver = NumericalDifferentiationSolver()
-            res = diff_solver.solve(f=g, x=x_n, h=1e-7, method="central")
-            if abs(res.y_data[0]) >= 1:
-                convergence_passed = False
-
         self._steps = []
         x_history: List[float] = []
         y_history: List[float] = []
@@ -380,12 +357,7 @@ class SimpleIterationSolver(Solver):
             title="Simple Iteration Convergence",
             x_data=x_history,
             y_data=y_history,
-            metadata={
-                "root": x_n,
-                "iterations": len(self._steps),
-                "diverged": diverged,
-                "convergence_passed": convergence_passed,
-            },
+            metadata={"root": x_n, "iterations": len(self._steps), "diverged": diverged},
         )
 
     def get_steps(self) -> List[NumericalStep]:
