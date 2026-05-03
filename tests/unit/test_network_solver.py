@@ -1,7 +1,9 @@
 import pytest
 import numpy as np
-from numcore_engine.solvers.network_solver import GaussSeidelSolver
+from numcore_engine.solvers.network_solver import GaussSeidelSolver, JacobiSolver
 from numcore_engine.models import SimulationData
+
+# --- Gauss-Seidel Tests ---
 
 def test_gauss_seidel_simple_2x2():
     solver = GaussSeidelSolver()
@@ -15,6 +17,7 @@ def test_gauss_seidel_simple_2x2():
     assert isinstance(result, SimulationData)
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
+    assert result.metadata["reordered"] is False
 
 def test_gauss_seidel_row_swapping():
     solver = GaussSeidelSolver()
@@ -28,6 +31,7 @@ def test_gauss_seidel_row_swapping():
     
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
+    assert result.metadata["reordered"] is True
 
 def test_gauss_seidel_3x3():
     solver = GaussSeidelSolver()
@@ -40,6 +44,17 @@ def test_gauss_seidel_3x3():
     
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
+
+def test_gauss_seidel_divergence():
+    solver = GaussSeidelSolver()
+    # Matrix that is not diagonally dominant and cannot be made so
+    A = [[1, 10, 10], [10, 1, 10], [10, 10, 1]]
+    b = [21, 21, 21]
+    
+    result = solver.solve(A=A, b=b, max_iter=50)
+    
+    assert result.metadata["diverged"] is True
+    assert result.metadata["converged"] is False
 
 def test_gauss_seidel_invalid_input():
     solver = GaussSeidelSolver()
@@ -76,3 +91,52 @@ def test_gauss_seidel_steps():
     assert len(steps) > 0
     assert steps[0].step_idx == 0
     assert "x" in steps[0].details
+
+# --- Jacobi Tests ---
+
+def test_jacobi_simple_2x2():
+    solver = JacobiSolver()
+    A = [[4, 1], [1, 3]]
+    b = [1, 2]
+    expected_x = [1/11, 7/11]
+    
+    result = solver.solve(A=A, b=b, tol=1e-8)
+    
+    assert isinstance(result, SimulationData)
+    assert np.allclose(result.y_data, expected_x, atol=1e-7)
+    assert result.metadata["converged"] is True
+    assert result.metadata["reordered"] is False
+
+def test_jacobi_3x3():
+    solver = JacobiSolver()
+    A = [[10, -1, 0], [-1, 10, -2], [0, -2, 10]]
+    b = [9, 7, 8]
+    expected_x = [1.0, 1.0, 1.0]
+    
+    result = solver.solve(A=A, b=b, tol=1e-8)
+    
+    assert np.allclose(result.y_data, expected_x, atol=1e-7)
+    assert result.metadata["converged"] is True
+
+def test_jacobi_divergence():
+    solver = JacobiSolver()
+    # Matrix that is not diagonally dominant and cannot be made so
+    A = [[1, 10, 10], [10, 1, 10], [10, 10, 1]]
+    b = [21, 21, 21]
+    
+    result = solver.solve(A=A, b=b, max_iter=50)
+    
+    assert result.metadata["diverged"] is True
+    assert result.metadata["converged"] is False
+
+def test_jacobi_row_swapping():
+    solver = JacobiSolver()
+    A = [[1, 3], [4, 1]]
+    b = [2, 1]
+    expected_x = [1/11, 7/11]
+    
+    result = solver.solve(A=A, b=b, tol=1e-8)
+    
+    assert np.allclose(result.y_data, expected_x, atol=1e-7)
+    assert result.metadata["converged"] is True
+    assert result.metadata["reordered"] is True

@@ -276,3 +276,41 @@ class NumericalFormatter:
             title="[bold cyan]Integration — Step Breakdown[/bold cyan]",
             border_style="cyan",
         ))
+
+    @staticmethod
+    def export_steps_to_csv(steps: List[NumericalStep], method_name: str, filename: Optional[str] = None) -> str:
+        """
+        Exports numerical steps to a CSV file.
+        Columns: step_idx, value, error, plus all keys found in 'details'.
+        """
+        import csv
+        from datetime import datetime
+
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"results_{method_name.lower().replace(' ', '_')}_{timestamp}.csv"
+
+        # Collect all unique detail keys
+        detail_keys = sorted({k for step in steps for k in step.details.keys()})
+        fieldnames = ["step_idx", "value", "error"] + detail_keys
+
+        with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for step in steps:
+                row = {
+                    "step_idx": step.step_idx,
+                    "value": step.value,
+                    "error": step.error if step.error is not None else "",
+                }
+                # Add details
+                for key in detail_keys:
+                    val = step.details.get(key, "")
+                    # Handle list values (like in linear systems) by converting to string
+                    if isinstance(val, list):
+                        row[key] = str(val)
+                    else:
+                        row[key] = val
+                writer.writerow(row)
+
+        return filename
