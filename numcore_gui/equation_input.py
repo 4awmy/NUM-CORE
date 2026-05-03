@@ -4,7 +4,7 @@ import sympy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from numcore_engine.parser import SymbolicParser
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.theme import BLACK, PANEL, BORDER, ERROR
 
 class EquationInputWidget(ctk.CTkFrame):
     """
@@ -29,10 +29,15 @@ class EquationInputWidget(ctk.CTkFrame):
         # Label
         self.label = ctk.CTkLabel(self, text=label_text, font=ctk.CTkFont(weight="bold"))
         self.label.grid(row=0, column=0, sticky="w", padx=5, pady=(5, 0))
+
+        # Entry
+        self.entry = ctk.CTkEntry(self, placeholder_text=placeholder)
+        self.entry.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
+        self.entry.bind("<KeyRelease>", self._handle_change)
         
         # Symbol Toolbar
         self.toolbar_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.toolbar_frame.grid(row=1, column=0, sticky="ew", padx=5, pady=(5, 0))
+        self.toolbar_frame.grid(row=2, column=0, sticky="ew", padx=5, pady=(0, 5))
         
         symbols = [
             ("sin", "sin()"), ("cos", "cos()"), ("tan", "tan()"), 
@@ -47,24 +52,9 @@ class EquationInputWidget(ctk.CTkFrame):
             )
             btn.grid(row=0, column=i, padx=2)
 
-        # Entry
-        self.entry = ctk.CTkEntry(self, placeholder_text=placeholder)
-        self.entry.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
-        self.entry.bind("<KeyRelease>", self._handle_change)
-        
-        # Error Label
-        self.error_label = ctk.CTkLabel(
-            self, 
-            text="", 
-            text_color="#f44336", 
-            font=ctk.CTkFont(size=11),
-            height=0
-        )
-        self.error_label.grid(row=3, column=0, sticky="w", padx=5)
-
         # Preview Canvas
         self.preview_frame = ctk.CTkFrame(self, height=60, fg_color=BLACK)
-        self.preview_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
+        self.preview_frame.grid(row=3, column=0, sticky="ew", padx=5, pady=(0, 5))
         self.preview_frame.grid_propagate(False)
         
         self.fig = Figure(figsize=(4, 0.6), dpi=100, facecolor=BLACK)
@@ -75,6 +65,16 @@ class EquationInputWidget(ctk.CTkFrame):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.preview_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
         self.canvas.get_tk_widget().configure(bg=BLACK)
+
+        # Error Label
+        self.error_label = ctk.CTkLabel(
+            self, 
+            text="", 
+            text_color=ERROR, 
+            font=ctk.CTkFont(size=11),
+            height=0
+        )
+        self.error_label.grid(row=4, column=0, sticky="w", padx=5)
 
 
     def _insert_symbol(self, symbol: str):
@@ -88,8 +88,11 @@ class EquationInputWidget(ctk.CTkFrame):
         self._handle_change()
 
     def get_expression(self) -> str:
-        """Returns the cleaned expression string."""
-        return self.entry.get().strip()
+        """Returns the normalized expression string (e.g., ^ → **)."""
+        raw = self.entry.get().strip()
+        if not raw:
+            return ""
+        return SymbolicParser.normalize(raw)
 
     def get_raw(self) -> str:
         """Returns the raw entry content."""
@@ -122,12 +125,12 @@ class EquationInputWidget(ctk.CTkFrame):
     def show_error(self, msg: str):
         """Displays an error message below the input."""
         self.error_label.configure(text=msg)
-        self.entry.configure(border_color="#f44336")
+        self.entry.configure(border_color=ERROR)
 
     def clear_error(self):
         """Clears any displayed error."""
         self.error_label.configure(text="")
-        self.entry.configure(border_color=["#979DA2", "#565B5E"]) # Default CTk colors
+        self.entry.configure(border_color=BORDER)
 
     def _handle_change(self, event=None):
         """Handles entry changes with debouncing."""
