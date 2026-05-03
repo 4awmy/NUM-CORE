@@ -88,8 +88,19 @@ class Chapter1AppPage(ctk.CTkFrame):
         guess = float(self.guess_entry.get())
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             data = self.solver.solve(expression=expression, initial_guess=guess, tolerance=1e-6)
             steps = self.solver.get_steps()
+
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Beam Stress Solver", comp_time)
+
             self.plot_manager.plot_solution_path(steps, expression)
             
             root = data.metadata.get("root")

@@ -88,11 +88,22 @@ class Chapter3AppPage(ctk.CTkFrame):
 
     def solve_action(self):
         try:
+            import time
+            start_time = time.perf_counter()
+
             x_points = ast.literal_eval(self.x_entry.get())
             y_points = ast.literal_eval(self.y_entry.get())
             target_x = float(self.target_entry.get())
             
             data = self.solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
+
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Thermodynamic Data Solver", comp_time)
+
             res_y = data.y_data[0] if isinstance(data.y_data, list) else data.y_data
             
             # Use enhanced plot_interpolation_result

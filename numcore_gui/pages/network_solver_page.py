@@ -8,6 +8,8 @@ from numcore_engine.solvers.network_solver import GaussSeidelSolver, JacobiSolve
 from numcore_engine.solvers.comparison import ComparisonRunner
 from numcore_gui.smart_solver_panel import SmartSolverPanel
 
+from numcore_gui.result_panel import ResultPanel
+
 class NetworkSolverPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color=BLACK, **kwargs)
@@ -90,17 +92,6 @@ class NetworkSolverPage(ctk.CTkFrame):
         )
         self.smart_solve_button.grid(row=12, column=0, padx=20, pady=(0, 20))
 
-        # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
-        self.results_panel.grid(row=13, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
         self.error_label.grid(row=14, column=0, padx=20, pady=5, sticky="w")
@@ -108,27 +99,27 @@ class NetworkSolverPage(ctk.CTkFrame):
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
-        self.viz_frame.grid_rowconfigure(0, weight=6) # 60% for plot
-        self.viz_frame.grid_rowconfigure(1, weight=4) # 40% for iteration table
+        self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
+        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
         self.viz_frame.grid_columnconfigure(0, weight=1)
 
-        self.viz_label = ctk.CTkLabel(self.viz_frame, text="Matrix Heatmap / Convergence", font=ctk.CTkFont(size=16, weight="bold"))
+        # Plot Container
+        self.plot_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.plot_container.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="nsew")
+        self.plot_container.grid_columnconfigure(0, weight=1)
+        self.plot_container.grid_rowconfigure(0, weight=1)
+
+        self.viz_label = ctk.CTkLabel(self.plot_container, text="Matrix Heatmap / Convergence", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.grid(row=0, column=0, padx=20, pady=(10,0), sticky="n")
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
-        self.plot_placeholder.grid(row=0, column=0, padx=20, pady=(40, 10), sticky="nsew")
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder.grid(row=1, column=0, padx=20, pady=(0, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
 
-        # Iteration Table Frame
-        self.iteration_table_frame = ctk.CTkFrame(self.viz_frame, corner_radius=5, fg_color=BLACK)
-        self.iteration_table_frame.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
-        self.iteration_table_frame.grid_columnconfigure(0, weight=1)
-        self.iteration_table_frame.grid_rowconfigure(0, weight=1)
-
-        self.iteration_table_scrollable_frame = ctk.CTkScrollableFrame(self.iteration_table_frame, label_text="Iteration History", fg_color=BLACK)
-        self.iteration_table_scrollable_frame.pack(fill="both", expand=True, padx=5, pady=5)
-        self.iteration_table_scrollable_frame.grid_columnconfigure(0, weight=1) # Make first column (Iter) expand
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
 
         # Solvers mapping
@@ -228,54 +219,15 @@ class NetworkSolverPage(ctk.CTkFrame):
             self.vector_entries[i].delete(0, ctk.END)
             self.vector_entries[i].insert(0, str(b[i]))
 
-    def _display_iteration_table(self, steps: List[NumericalStep]):
-        # Clear previous table content
-        for widget in self.iteration_table_scrollable_frame.winfo_children():
-            widget.destroy()
-
-        if not steps:
-            ctk.CTkLabel(self.iteration_table_scrollable_frame, text="No iteration data available.").grid(row=0, column=0, padx=5, pady=5)
-            return
-
-        # Headers
-        headers = ["Iter"]
-        # Determine number of x variables from the first step's details
-        first_step_x_values = steps[0].details.get("x_values", [])
-        for i in range(len(first_step_x_values)):
-            headers.append(f"x{i+1}")
-        headers.append("Max Error")
-
-        for col_idx, header_text in enumerate(headers):
-            header_label = ctk.CTkLabel(self.iteration_table_scrollable_frame, text=header_text, font=ctk.CTkFont(weight="bold"))
-            header_label.grid(row=0, column=col_idx, padx=5, pady=5, sticky="ew")
-
-        # Data rows
-        for row_idx, step in enumerate(steps):
-            col_offset = 0
-            # Iteration number
-            ctk.CTkLabel(self.iteration_table_scrollable_frame, text=str(step.step_idx)).grid(row=row_idx + 1, column=col_offset, padx=5, pady=2)
-            col_offset += 1
-
-            # x values
-            x_values = step.details.get("x_values", [])
-            for val in x_values:
-                ctk.CTkLabel(self.iteration_table_scrollable_frame, text=f"{val:.4f}").grid(row=row_idx + 1, column=col_offset, padx=5, pady=2)
-                col_offset += 1
-            
-            # Max Error
-            error_text = f"{step.error:.4e}" if step.error is not None else "N/A"
-            ctk.CTkLabel(self.iteration_table_scrollable_frame, text=error_text).grid(row=row_idx + 1, column=col_offset, padx=5, pady=2)
-            
-            # Configure column weights for data columns
-            for col in range(len(headers)):
-                self.iteration_table_scrollable_frame.grid_columnconfigure(col, weight=1)
-
     def solve_action(self):
         """Triggers the numerical solver and updates the matrix heatmap."""
         self.error_label.configure(text="")
         method = self.method_menu.get()
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             # Parse Matrix A
             A = []
             for i in range(self.current_matrix_size):
@@ -306,6 +258,16 @@ class NetworkSolverPage(ctk.CTkFrame):
             # Visualization logic
             steps = solver.get_steps() # Always get steps to populate the table
 
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
+            # Update Result Panel
+            self.result_panel.update_result(data, steps)
+
             # Plotting logic based on matrix size
             if len(A) == 2:
                 # For 2x2 systems, show the vector field (lines intersection)
@@ -313,29 +275,6 @@ class NetworkSolverPage(ctk.CTkFrame):
             else:
                 # For larger systems, show the iteration error history
                 self.plot_manager.plot_iteration_history(steps)
-            
-            self._display_iteration_table(steps) # Display iteration table
-
-            # Update results
-            x_sol = data.y_data
-            iters = data.metadata.get("iterations")
-            converged = data.metadata.get("converged", True)
-            reordered = data.metadata.get("reordered", False)
-            diverged = data.metadata.get("diverged", False)
-            
-            status = "Success"
-            if diverged:
-                status = "DIVERGED"
-            elif not converged:
-                status = "Max Iterations Reached"
-            
-            reorder_msg = "\n(Matrix was reordered for dominance)" if reordered else ""
-            
-            sol_str = ", ".join([f"{val:.4f}" for val in x_sol])
-            self.result_label.configure(
-                text=f"Status: {status}{reorder_msg}\nSolution x: [{sol_str}]\nIterations: {iters}",
-                font=ctk.CTkFont(size=11)
-            )
             
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")

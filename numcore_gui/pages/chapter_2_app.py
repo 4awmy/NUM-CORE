@@ -84,6 +84,9 @@ class Chapter2AppPage(ctk.CTkFrame):
         vector_str = self.vector_entry.get()
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             # Parse matrix
             matrix = [[float(x) for x in row.split(",")] for row in matrix_str.split("\n") if row.strip()]
             # Parse vector
@@ -91,6 +94,13 @@ class Chapter2AppPage(ctk.CTkFrame):
             
             data = self.solver.solve(matrix=matrix, vector=vector)
             
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Circuit Analysis Solver", comp_time)
+
             solution = data.metadata.get("solution")
             
             # Use plot_bar for solution vector

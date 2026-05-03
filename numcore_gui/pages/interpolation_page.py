@@ -188,6 +188,9 @@ class InterpolationPage(ctk.CTkFrame):
         method = self.method_menu.get()
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             x_points = ast.literal_eval(self.x_entry.get())
             y_points = ast.literal_eval(self.y_entry.get())
             target_x_str = self.target_entry.get().strip()
@@ -204,6 +207,14 @@ class InterpolationPage(ctk.CTkFrame):
                 data = solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
 
             steps = solver.get_steps()
+
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
             self.result_panel.update_result(data, steps)
 
             # Clear previous plot

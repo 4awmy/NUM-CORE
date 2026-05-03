@@ -94,9 +94,19 @@ class Chapter4AppPage(ctk.CTkFrame):
         b = float(self.b_entry.get())
         
         try:
+            import time
+            start_time = time.perf_counter()
+
             f = SymbolicParser.parse_expression(expression)
             data = self.solver.solve(f=f, a=a, b=b, n=100, method="1/3")
             
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Work Done Solver", comp_time)
+
             self.plot_manager.plot_integration_area(expression, a, b, "Simpson's 1/3")
             
             result = data.metadata.get("total_integral")

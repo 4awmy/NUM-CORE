@@ -14,6 +14,8 @@ from numcore_engine.solvers.root_finder import (
 from numcore_engine.solvers.comparison import ComparisonRunner
 from numcore_gui.smart_solver_panel import SmartSolverPanel
 
+from numcore_gui.equation_input import EquationInputWidget
+
 class RootFinderPage(ctk.CTkFrame):
     EXAMPLE_PROBLEMS = {
         "Bisection": [
@@ -158,10 +160,8 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_type_menu.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Input Fields
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., x**2 - 5")
-        self.func_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="ew")
 
         # Dynamic Input 1 (Guess / a / x0)
         self.input1_label = ctk.CTkLabel(self.input_frame, text="Initial Guess:")
@@ -241,8 +241,7 @@ class RootFinderPage(ctk.CTkFrame):
         selected_example = next((ex for ex in examples_for_method if ex["name"] == example_name), None)
 
         if selected_example:
-            self.func_entry.delete(0, ctk.END)
-            self.func_entry.insert(0, selected_example.get("expression", ""))
+            self.func_input.set_expression(selected_example.get("expression", ""))
             
             self.tol_entry.delete(0, ctk.END)
             self.tol_entry.insert(0, selected_example.get("tol", "1e-6"))
@@ -278,15 +277,15 @@ class RootFinderPage(ctk.CTkFrame):
             self.input1_label.configure(text="Initial Guess (x0):")
             self.input2_label.grid_forget()
             self.input2_entry.grid_forget()
-            self.func_label.configure(text="Equation f(x):")
+            self.func_input.label.configure(text="Equation f(x):")
         elif method == "Simple Iteration":
             self.input1_label.configure(text="Initial Guess (x0):")
             self.input2_label.grid_forget()
             self.input2_entry.grid_forget()
-            self.func_label.configure(text="Iteration Function g(x):")
+            self.func_input.label.configure(text="Iteration Function g(x):")
         
         if method != "Simple Iteration":
-            self.func_label.configure(text="Equation f(x):")
+            self.func_input.label.configure(text="Equation f(x):")
 
         # Update examples menu
         examples = self.EXAMPLE_PROBLEMS.get(method, [])
@@ -301,13 +300,17 @@ class RootFinderPage(ctk.CTkFrame):
         """Triggers the root finder solver and updates visualization."""
         self.error_label.configure(text="")
         method = self.method_menu.get()
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
 
         if not expression:
             self.error_label.configure(text="Error: Expression is required.")
             return
 
         try:
+            start_time = math.perf_counter() if hasattr(math, "perf_counter") else 0 # Fallback
+            import time
+            start_time = time.perf_counter()
+
             tol = float(self.tol_entry.get() or 1e-6)
             solver = self.solvers[method]
 
@@ -329,6 +332,13 @@ class RootFinderPage(ctk.CTkFrame):
             data = solver.solve(**kwargs)
             steps = solver.get_steps()
 
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
             # Update Result Panel (Methodology Table)
             self.result_panel.update_result(data, steps)
 
@@ -345,7 +355,7 @@ class RootFinderPage(ctk.CTkFrame):
     def smart_solve_action(self):
         """Runs all compatible root finders and shows comparison."""
         self.error_label.configure(text="")
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
 
         if not expression:
             self.error_label.configure(text="Error: Expression is required.")

@@ -17,6 +17,8 @@ from numcore_engine.solvers.calculus_engine import (
 from numcore_engine.solvers.comparison import ComparisonRunner
 from numcore_gui.smart_solver_panel import SmartSolverPanel
 
+from numcore_gui.equation_input import EquationInputWidget
+
 class CalculusPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, fg_color=BLACK, **kwargs)
@@ -54,11 +56,9 @@ class CalculusPage(ctk.CTkFrame):
         self.method_menu.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Equation
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., sin(x)")
-        self.func_entry.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.func_entry.insert(0, "x**2")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="ew")
+        self.func_input.set_expression("x**2")
 
         # Range / Point
         self.range_label = ctk.CTkLabel(self.input_frame, text="Range [a, b]:")
@@ -151,13 +151,16 @@ class CalculusPage(ctk.CTkFrame):
         """Triggers the numerical calculus solver and updates the plot."""
         self.error_label.configure(text="")
         method = self.method_menu.get()
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
         
         if not expression:
             self.error_label.configure(text="Error: Expression is required.")
             return
 
         try:
+            import time
+            start_time = time.perf_counter()
+
             f = SymbolicParser.parse_expression(expression)
             solver = self.solvers[method]
             
@@ -205,13 +208,20 @@ class CalculusPage(ctk.CTkFrame):
                 # Use the new integration area plot
                 self.plot_manager.plot_integration_area(expression, a, b, method)
 
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
 
     def smart_solve_action(self):
         """Runs all compatible calculus solvers and shows comparison."""
         self.error_label.configure(text="")
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
         method = self.method_menu.get()
 
         if not expression:
