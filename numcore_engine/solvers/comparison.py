@@ -34,37 +34,37 @@ class ComparisonRunner:
                         y_data=data.y_data
                     )
                     results.append(comp_data)
-                except Exception:
-                    # Skip solvers that fail for this specific input
-                    continue
-        
+                except Exception as exc:
+                    # Record failed solver with error reason for diagnostic panel
+                    results.append(SimulationData(
+                        title=name,
+                        metadata={"diverged": True, "error_reason": str(exc), "iterations": 0},
+                        computation_time_ms=(time.perf_counter() - start_time) * 1000,
+                        x_data=[],
+                        y_data=[]
+                    ))
+
         if not results:
             raise ValueError("No compatible solvers found for the given input.")
 
-        # Determine best method
-        # Criteria: 
-        # 1. Not diverged
-        # 2. Fewest iterations (if applicable)
-        # 3. Fastest computation time
-        
         valid_results = [r for r in results if not r.metadata.get("diverged", False)]
-        
-        if not valid_results:
-            # If all diverged, pick the one that lasted longest or just the first one
+        all_diverged = len(valid_results) == 0
+
+        if all_diverged:
             best_method_data = results[0]
         else:
-            # Sort by iterations first, then by time
             best_method_data = min(
-                valid_results, 
+                valid_results,
                 key=lambda x: (x.metadata.get("iterations", 999), x.computation_time_ms)
             )
-        
+
         recommendation = self._generate_recommendation(results, best_method_data.title)
-        
+
         return ComparisonResult(
-            best_method=best_method_data.title,
+            best_method=None if all_diverged else best_method_data.title,
             results=results,
-            recommendation=recommendation
+            recommendation=recommendation,
+            all_diverged=all_diverged
         )
 
     def _generate_recommendation(self, results: List[NumericalData], best_name: str) -> str:

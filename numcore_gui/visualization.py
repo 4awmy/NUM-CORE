@@ -171,8 +171,12 @@ class PlotManager:
         self.ax.plot(x_vals, y_vals, color='white', alpha=0.4, label=f"f(x) = {f_str}")
         self.ax.axhline(0, color=ACCENT_ORANGE, linestyle='--', alpha=0.5)
         
-        # Plot path
-        path_y = [f(x) for x in guesses]
+        # Plot path — guard against NaN/complex intermediate guesses
+        try:
+            path_y = [f(x) for x in guesses]
+        except Exception:
+            path_y = [f(guesses[-1])]
+            guesses = [guesses[-1]]
         self.ax.plot(guesses, path_y, color=ACCENT_BLUE, marker='x', linestyle='-', linewidth=1, label="Search Path")
         
         # Highlight root
@@ -319,4 +323,41 @@ class PlotManager:
 
     def export_plot(self, filename: str):
         """Exports the current figure to a file."""
-        self.figure.savefig(filename)
+        os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+        self.figure.savefig(filename, facecolor=self.figure.get_facecolor())
+
+    def plot_bisection_brackets(self, steps: List[NumericalStep], f_str: str):
+        """Plot function curve with narrowing bracket markers per bisection iteration."""
+        self.ax.clear()
+        self._apply_dark_theme()
+        f = SymbolicParser.parse_expression(f_str)
+        if not steps:
+            self.canvas.draw()
+            return
+        a_vals = [s.details.get('a', s.value) for s in steps]
+        b_vals = [s.details.get('b', s.value) for s in steps]
+        x_min = min(min(a_vals), min(b_vals))
+        x_max = max(max(a_vals), max(b_vals))
+        margin = max((x_max - x_min) * 0.2, 0.5)
+        x_vals = np.linspace(x_min - margin, x_max + margin, 400)
+        try:
+            y_vals = [f(x) for x in x_vals]
+        except Exception:
+            self.canvas.draw()
+            return
+        self.ax.plot(x_vals, y_vals, color='white', linewidth=2, label=f"f(x)")
+        self.ax.axhline(0, color=ACCENT_ORANGE, linestyle='--', alpha=0.4)
+        n = len(steps)
+        for i, step in enumerate(steps):
+            alpha = 0.2 + 0.6 * (i / max(n - 1, 1))
+            a = step.details.get('a', step.value)
+            b = step.details.get('b', step.value)
+            self.ax.axvline(a, color=ACCENT_BLUE, alpha=alpha, linewidth=0.8)
+            self.ax.axvline(b, color=ACCENT_BLUE, alpha=alpha, linewidth=0.8)
+        root = steps[-1].value
+        self.ax.scatter([root], [0], color='#4caf50', s=80, zorder=5, label="Root")
+        self.ax.set_title("Bisection: Bracket Convergence")
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("f(x)")
+        self.ax.legend()
+        self.canvas.draw()

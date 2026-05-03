@@ -106,6 +106,7 @@ class EquationInputWidget(ctk.CTkFrame):
         """Validates the current expression."""
         expr = self.get_expression()
         if not expr:
+            self.show_error("Expression cannot be empty")
             return False
         try:
             valid = SymbolicParser.validate(expr)
@@ -154,10 +155,9 @@ class EquationInputWidget(ctk.CTkFrame):
             return
 
         try:
-            normalized = SymbolicParser.normalize(expr_str)
-            if normalized:
-                sym_expr = sympy.sympify(normalized)
-                latex_str = sympy.latex(sym_expr)
+            sym_expr = sympy.sympify(expr_str)
+            latex_str = sympy.latex(sym_expr)
+            if latex_str:
                 self.ax.text(0.5, 0.5, f"${latex_str}$", 
                             fontsize=14, color='white', 
                             ha='center', va='center',

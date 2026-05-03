@@ -48,15 +48,17 @@ class ResultPanel(ctk.CTkFrame):
             summary_text += f"Integral: {data.metadata['total_integral']:.8f}\n"
         if "iterations" in data.metadata:
             summary_text += f"Iterations: {data.metadata['iterations']}\n"
-        if "h_value" in data.metadata:
-            h = data.metadata['h_value']
+        if "h" in data.metadata:
+            h = data.metadata['h']
             summary_text += f"h: {h:.6f}\n" if isinstance(h, float) else f"h: {h}\n"
         if "weighted_sum_str" in data.metadata:
             summary_text += f"\nFormula Breakdown:\n{data.metadata['weighted_sum_str']}\n"
         if "polynomial_str" in data.metadata:
             summary_text += f"\nPolynomial:\n{data.metadata['polynomial_str']}\n"
-        if "target_x" in data.metadata and data.metadata["target_x"] is not None:
-            summary_text += f"\nInterpolated value at x={data.metadata['target_x']}: {data.metadata['interpolated_y']:.8f}\n"
+        if "target_x" in data.metadata and data.metadata.get("target_x") is not None:
+            y_val = data.metadata.get('interpolated_y')
+            if y_val is not None:
+                summary_text += f"\nInterpolated value at x={data.metadata['target_x']}: {y_val:.8f}\n"
             
         self.summary_label.configure(text=summary_text)
         

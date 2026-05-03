@@ -27,6 +27,7 @@ class SimulationData(NumericalData):
 
 @dataclass(frozen=True)
 class ComparisonResult:
-    best_method: str
+    best_method: Optional[str]
     results: List[NumericalData]
     recommendation: str
+    all_diverged: bool = False

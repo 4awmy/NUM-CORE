@@ -1,94 +1,117 @@
 import customtkinter as ctk
-from typing import List, Dict, Any, Optional
+from typing import Optional
 from numcore_engine.models import ComparisonResult, NumericalData
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.theme import BLACK, PANEL, BORDER, SUCCESS, ERROR, WARN, ACCENT_BLUE
 
-class SmartSolverPanel(ctk.CTkToplevel):
+
+class SmartSolverPanel(ctk.CTkFrame):
     """
-    A popup window to display comparison results between multiple solvers.
+    Inline frame to display Smart Solver comparison results within a chapter page.
+    Shows recommendation card and performance table, or diagnostic panel on all-diverge.
     """
-    def __init__(self, master, comparison_result: ComparisonResult, **kwargs):
-        super().__init__(master, **kwargs)
-        
-        self.title("Smart Solver Comparison")
-        self.geometry("700x500")
-        self.configure(fg_color=BLACK)
-        
-        # Make it modal-like
-        self.after(10, self.lift)
-        self.focus_set()
-        
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, fg_color=BLACK, border_color=BORDER, border_width=1, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
-        
-        # Recommendation Header
-        self.header_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
-        self.header_frame.grid(row=0, column=0, padx=20, pady=20, sticky="ew")
-        
-        self.rec_title = ctk.CTkLabel(
-            self.header_frame, 
-            text="Smart Recommendation", 
-            font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#4CAF50" # Greenish
-        )
-        self.rec_title.pack(padx=20, pady=(15, 5), anchor="w")
-        
-        self.rec_label = ctk.CTkLabel(
-            self.header_frame, 
-            text=comparison_result.recommendation,
-            wraplength=600,
-            justify="left",
-            font=ctk.CTkFont(size=13)
-        )
-        self.rec_label.pack(padx=20, pady=(0, 15), anchor="w")
-        
-        # Comparison Table
-        self.table_frame = ctk.CTkScrollableFrame(
-            self, 
-            label_text="Performance Comparison", 
-            corner_radius=10,
-            fg_color=BLACK,
-            label_fg_color=PANEL
-        )
-        self.table_frame.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
-        self.table_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-        
-        # Headers
-        headers = ["Method", "Time (ms)", "Iterations", "Result"]
-        for i, h in enumerate(headers):
-            lbl = ctk.CTkLabel(self.table_frame, text=h, font=ctk.CTkFont(weight="bold"))
-            lbl.grid(row=0, column=i, padx=10, pady=10, sticky="nsew")
-            
-        # Data Rows
-        for r_idx, res in enumerate(comparison_result.results):
-            # Highlight best method
-            is_best = res.title == comparison_result.best_method
-            bg_color = "#2E7D32" if is_best else "transparent"
-            
-            # Method Name
-            ctk.CTkLabel(self.table_frame, text=res.title, fg_color=bg_color).grid(row=r_idx+1, column=0, padx=5, pady=5, sticky="ew")
-            
-            # Time
-            ctk.CTkLabel(self.table_frame, text=f"{res.computation_time_ms:.2f}").grid(row=r_idx+1, column=1, padx=5, pady=5)
-            
-            # Iterations
-            iters = res.metadata.get("iterations", "--")
-            ctk.CTkLabel(self.table_frame, text=str(iters)).grid(row=r_idx+1, column=2, padx=5, pady=5)
-            
-            # Result (Root or value)
-            result_val = "--"
-            if "root" in res.metadata:
-                result_val = f"{res.metadata['root']:.6f}"
-            elif "total_integral" in res.metadata:
-                result_val = f"{res.metadata['total_integral']:.6f}"
-            elif "interpolated_y" in res.metadata:
-                result_val = f"{res.metadata['interpolated_y']:.6f}"
-                
-            if res.metadata.get("diverged", False):
-                result_val = "Diverged"
-                
-            ctk.CTkLabel(self.table_frame, text=result_val).grid(row=r_idx+1, column=3, padx=5, pady=5)
 
-        # Close Button
-        self.close_button = ctk.CTkButton(self, text="Close", command=self.destroy)
-        self.close_button.grid(row=2, column=0, padx=20, pady=20)
+        # Recommendation / Diagnostic header
+        self.header_frame = ctk.CTkFrame(self, corner_radius=8, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.header_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+
+        self.rec_title = ctk.CTkLabel(
+            self.header_frame,
+            text="Smart Recommendation",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=SUCCESS,
+        )
+        self.rec_title.pack(padx=15, pady=(12, 4), anchor="w")
+
+        self.rec_label = ctk.CTkLabel(
+            self.header_frame,
+            text="",
+            wraplength=700,
+            justify="left",
+            font=ctk.CTkFont(size=12),
+        )
+        self.rec_label.pack(padx=15, pady=(0, 12), anchor="w")
+
+        # Comparison table
+        self.table_frame = ctk.CTkScrollableFrame(
+            self,
+            label_text="Performance Comparison",
+            corner_radius=8,
+            fg_color=BLACK,
+            label_fg_color=PANEL,
+            height=200,
+        )
+        self.table_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
+        self.table_frame.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+
+    def populate(self, result: ComparisonResult):
+        """Fill the panel with a ComparisonResult."""
+        # Clear table
+        for w in self.table_frame.winfo_children():
+            w.destroy()
+
+        if result.all_diverged:
+            self.rec_title.configure(text="All Methods Diverged", text_color=WARN)
+            self.rec_label.configure(text=result.recommendation)
+            self._render_diagnostic_rows(result)
+        else:
+            self.rec_title.configure(text="Smart Recommendation", text_color=SUCCESS)
+            self.rec_label.configure(text=result.recommendation)
+            self._render_comparison_rows(result)
+
+    def _render_comparison_rows(self, result: ComparisonResult):
+        headers = ["Method", "Time (ms)", "Iterations", "Result", "Status"]
+        for i, h in enumerate(headers):
+            ctk.CTkLabel(self.table_frame, text=h, font=ctk.CTkFont(weight="bold")).grid(
+                row=0, column=i, padx=8, pady=8, sticky="nsew"
+            )
+
+        for r_idx, res in enumerate(result.results):
+            is_best = res.title == result.best_method
+            diverged = res.metadata.get("diverged", False)
+            bg = ACCENT_BLUE if is_best else ("transparent" if not diverged else "transparent")
+            text_col = ERROR if diverged else ("white" if not is_best else "black")
+
+            ctk.CTkLabel(self.table_frame, text=res.title, fg_color=bg, text_color=text_col).grid(
+                row=r_idx + 1, column=0, padx=5, pady=4, sticky="ew"
+            )
+            ctk.CTkLabel(self.table_frame, text=f"{res.computation_time_ms:.2f}").grid(
+                row=r_idx + 1, column=1, padx=5, pady=4
+            )
+            ctk.CTkLabel(self.table_frame, text=str(res.metadata.get("iterations", "--"))).grid(
+                row=r_idx + 1, column=2, padx=5, pady=4
+            )
+
+            val = "--"
+            for key in ("root", "total_integral", "interpolated_y"):
+                if key in res.metadata and isinstance(res.metadata[key], (int, float)):
+                    val = f"{res.metadata[key]:.6f}"
+                    break
+            if diverged:
+                val = "Diverged"
+            ctk.CTkLabel(self.table_frame, text=val).grid(row=r_idx + 1, column=3, padx=5, pady=4)
+
+            status = "BEST" if is_best else ("DIVERGED" if diverged else "OK")
+            status_color = SUCCESS if is_best else (ERROR if diverged else "gray")
+            ctk.CTkLabel(self.table_frame, text=status, text_color=status_color).grid(
+                row=r_idx + 1, column=4, padx=5, pady=4
+            )
+
+    def _render_diagnostic_rows(self, result: ComparisonResult):
+        headers = ["Method", "Reason"]
+        for i, h in enumerate(headers):
+            ctk.CTkLabel(self.table_frame, text=h, font=ctk.CTkFont(weight="bold")).grid(
+                row=0, column=i, padx=8, pady=8, sticky="nsew"
+            )
+        for r_idx, res in enumerate(result.results):
+            reason = res.metadata.get("error_reason", "Diverged — check initial values or parameters")
+            ctk.CTkLabel(self.table_frame, text=res.title, text_color=WARN).grid(
+                row=r_idx + 1, column=0, padx=5, pady=4, sticky="ew"
+            )
+            ctk.CTkLabel(self.table_frame, text=reason, wraplength=500, justify="left").grid(
+                row=r_idx + 1, column=1, padx=5, pady=4, sticky="ew"
+            )
