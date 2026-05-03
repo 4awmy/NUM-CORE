@@ -167,3 +167,33 @@ def test_gauss_seidel_solve_returns_simulation_data():
     assert "sdd_reordered" in result.metadata
     assert "diverged" in result.metadata
     assert result.metadata["method_type"] == "successive"
+
+
+# Minimal valid kwargs for each solver to exercise solve() → SimulationData contract.
+_SOLVER_SOLVE_FIXTURES = [
+    (SecantSolver, {"expression": "x**2 - 4", "x0": 1.0, "x1": 3.0}),
+    (LagrangeInterpolationSolver, {"x_points": [0, 1, 2], "y_points": [1, 3, 2], "target_x": 1.0}),
+    (NewtonDifferenceTableSolver, {"x_points": [0, 1, 2], "y_points": [1, 3, 2]}),
+    (NewtonDividedDifferenceSolver, {"x_points": [0, 1, 2], "y_points": [1, 3, 2], "target_x": 1.0}),
+    (IntegrationSolver, {"x_points": [0, 1, 2], "y_points": [1, 4, 9], "method": "trapezoidal"}),
+    (MidpointSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "n": 4}),
+    (TrapezoidalSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "n": 4}),
+    (SimpsonOneThirdSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "n": 2}),
+    (SimpsonThreeEighthsSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "n": 3}),
+    (SimpsonsRuleSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "n": 2, "method": "1/3"}),
+    (GaussianQuadratureSolver, {"f": lambda x: x**2, "a": 0, "b": 1, "points": 2}),
+    (NumericalDifferentiationSolver, {"f": lambda x: x**2, "x": 1.0, "h": 1e-5, "method": "central"}),
+    (LinearInterpolationSolver, {"x_points": [0, 1, 2], "y_points": [0, 2, 0], "target_x": 0.5}),
+    (CubicSplineSolver, {"x_points": [0, 1, 2], "y_points": [0, 1, 0], "target_x": 0.5}),
+]
+
+
+@pytest.mark.parametrize("solver_cls,kwargs", _SOLVER_SOLVE_FIXTURES)
+def test_solver_solve_returns_simulation_data(solver_cls, kwargs):
+    """All solvers' solve() must return a SimulationData instance."""
+    from numcore_engine.models import SimulationData
+    solver = solver_cls()
+    result = solver.solve(**kwargs)
+    assert isinstance(result, SimulationData), (
+        f"{solver_cls.__name__}.solve() must return SimulationData, got {type(result).__name__}."
+    )
