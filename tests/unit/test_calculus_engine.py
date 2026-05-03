@@ -8,10 +8,52 @@ from numcore_engine.solvers.calculus_engine import (
     IntegrationSolver,
     MidpointSolver,
     TrapezoidalSolver,
+    SimpsonOneThirdSolver,
+    SimpsonThreeEighthsSolver,
     SimpsonsRuleSolver,
     GaussianQuadratureSolver,
     NumericalDifferentiationSolver
 )
+
+
+def test_simpson_one_third_solver():
+    solver = SimpsonOneThirdSolver()
+    f = lambda x: x**2
+    # Integral of x^2 from 0 to 2 is 8/3
+    data = solver.solve(f=f, a=0, b=2, n=2)
+    assert np.isclose(data.y_data[0], 8/3)
+    assert data.metadata["n_even_check"] is True
+    assert "weighted_sum_str" in data.metadata
+
+    # Data points
+    x = [0, 1, 2]
+    y = [0, 1, 4]
+    data_pts = solver.solve(x_points=x, y_points=y)
+    assert np.isclose(data_pts.y_data[0], 8/3)
+
+    # Invalid n
+    with pytest.raises(ValueError):
+        solver.solve(f=f, a=0, b=2, n=3)
+
+
+def test_simpson_three_eighths_solver():
+    solver = SimpsonThreeEighthsSolver()
+    f = lambda x: x**3
+    # Integral of x^3 from 0 to 3 is 3^4 / 4 = 81/4 = 20.25
+    data = solver.solve(f=f, a=0, b=3, n=3)
+    assert np.isclose(data.y_data[0], 20.25)
+    assert data.metadata["n_mod3_check"] is True
+    assert "weighted_sum_str" in data.metadata
+
+    # Data points
+    x = [0, 1, 2, 3]
+    y = [0, 1, 8, 27]
+    data_pts = solver.solve(x_points=x, y_points=y)
+    assert np.isclose(data_pts.y_data[0], 20.25)
+
+    # Invalid n
+    with pytest.raises(ValueError):
+        solver.solve(f=f, a=0, b=3, n=2)
 
 
 def test_lagrange_interpolation_basic():
@@ -50,7 +92,7 @@ def test_newton_difference_table_basic():
     assert table[0][1] == 7
     assert table[0][2] == 12
     assert table[0][3] == 6
-    assert len(solver.get_steps()) == 3
+    assert len(solver.get_steps()) == 4
 
 
 def test_interpolation_solver_alias():
@@ -265,6 +307,16 @@ def test_get_steps_all_solvers():
     s7 = SimpsonsRuleSolver()
     s7.solve(f=lambda x: x, a=0, b=1, n=2, method="1/3")
     assert len(s7.get_steps()) > 0
+
+    # Simpson 1/3
+    s10 = SimpsonOneThirdSolver()
+    s10.solve(f=lambda x: x, a=0, b=1, n=2)
+    assert len(s10.get_steps()) > 0
+
+    # Simpson 3/8
+    s11 = SimpsonThreeEighthsSolver()
+    s11.solve(f=lambda x: x, a=0, b=1, n=3)
+    assert len(s11.get_steps()) > 0
     
     # Gaussian
     s8 = GaussianQuadratureSolver()

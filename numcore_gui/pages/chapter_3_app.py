@@ -4,17 +4,18 @@ import ast
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData
 from numcore_engine.solvers.calculus_engine import NewtonDividedDifferenceSolver
+from numcore_gui.theme import BLACK, PANEL, BORDER
 
 class Chapter3AppPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Problem & Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Thermodynamic Data Fitting", font=ctk.CTkFont(size=18, weight="bold"))
@@ -61,7 +62,7 @@ class Chapter3AppPage(ctk.CTkFrame):
         self.solve_button.grid(row=8, column=0, padx=20, pady=20)
 
         # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
+        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
         self.results_panel.grid(row=9, column=0, padx=20, pady=10, sticky="nsew")
         self.results_panel.grid_columnconfigure(0, weight=1)
         
@@ -72,43 +73,52 @@ class Chapter3AppPage(ctk.CTkFrame):
         self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         
         self.viz_label = ctk.CTkLabel(self.viz_frame, text="Pressure vs Temperature Curve", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.pack(pady=20)
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
         self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
         
         self.plot_manager = PlotManager(self.plot_placeholder)
+
         self.solver = NewtonDividedDifferenceSolver()
 
     def solve_action(self):
         try:
+            import time
+            start_time = time.perf_counter()
+
             x_points = ast.literal_eval(self.x_entry.get())
             y_points = ast.literal_eval(self.y_entry.get())
             target_x = float(self.target_entry.get())
             
             data = self.solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
+
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status("Thermodynamic Data Solver", comp_time)
+
             res_y = data.y_data[0] if isinstance(data.y_data, list) else data.y_data
             
-            # Generate smooth curve for plotting
-            x_smooth = np.linspace(min(x_points), max(x_points), 100).tolist()
-            smooth_data = self.solver.solve(x_points=x_points, y_points=y_points, target_x=x_smooth)
+            # Use enhanced plot_interpolation_result
+            points = list(zip(x_points, y_points))
             
-            plot_data = SimulationData(
-                title="Interpolated Pressure Curve",
-                x_data=x_smooth,
-                y_data=smooth_data.y_data,
-                metadata={"scatter_x": x_points, "scatter_y": y_points}
+            # Create a lambda for the polynomial function
+            def poly_f(x):
+                res = self.solver.solve(x_points=x_points, y_points=y_points, target_x=x)
+                return res.y_data[0] if isinstance(res.y_data, list) else res.y_data
+
+            self.plot_manager.plot_interpolation_result(
+                points=points,
+                polynomial_f=poly_f,
+                target_x=target_x
             )
-            self.plot_manager.plot_static(plot_data)
-            
-            # Manually highlight the target point
-            self.plot_manager.ax.scatter([target_x], [res_y], color='red', s=100, zorder=6, label="Target Point")
-            self.plot_manager.ax.legend()
-            self.plot_manager.canvas.draw()
             
             self.result_label.configure(text=f"Estimated Pressure at {target_x}°C:\n{res_y:.4f} kPa")
         except Exception as e:

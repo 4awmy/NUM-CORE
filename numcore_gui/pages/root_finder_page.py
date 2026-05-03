@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import math
 from numcore_gui.visualization import PlotManager
+from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.result_panel import ResultPanel
 
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.root_finder import (
@@ -9,6 +11,10 @@ from numcore_engine.solvers.root_finder import (
     SecantSolver, 
     SimpleIterationSolver
 )
+from numcore_engine.solvers.comparison import ComparisonRunner
+from numcore_gui.smart_solver_panel import SmartSolverPanel
+
+from numcore_gui.equation_input import EquationInputWidget
 
 class RootFinderPage(ctk.CTkFrame):
     EXAMPLE_PROBLEMS = {
@@ -108,14 +114,14 @@ class RootFinderPage(ctk.CTkFrame):
         ],
     }
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 1: Root Finding", font=ctk.CTkFont(size=18, weight="bold"))
@@ -154,10 +160,8 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_type_menu.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Input Fields
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., x**2 - 5")
-        self.func_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="ew")
 
         # Dynamic Input 1 (Guess / a / x0)
         self.input1_label = ctk.CTkLabel(self.input_frame, text="Initial Guess:")
@@ -177,28 +181,26 @@ class RootFinderPage(ctk.CTkFrame):
         self.tol_entry.insert(0, "1e-6")
 
         self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Equation", command=self.solve_action)
-        self.solve_button.grid(row=15, column=0, padx=20, pady=20)
+        self.solve_button.grid(row=15, column=0, padx=20, pady=(20, 10))
 
-        # Results area (Redesigned as a panel)
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
-        self.results_panel.grid(row=16, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        self.smart_solve_button = ctk.CTkButton(
+            self.input_frame, 
+            text="Smart Solve (Compare)", 
+            command=self.smart_solve_action,
+            fg_color="#1f538d",
+            hover_color="#14375e"
+        )
+        self.smart_solve_button.grid(row=16, column=0, padx=20, pady=(0, 20))
 
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
         self.error_label.grid(row=17, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
-        self.viz_frame.grid_rowconfigure(1, weight=1) # Table takes 1/2
+        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
         self.viz_frame.grid_columnconfigure(0, weight=1)
 
         # Plot Container
@@ -211,19 +213,15 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10)) # Adjust padding
 
         # Placeholder for Matplotlib plot
-        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color="gray20", corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
         self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew") # Adjusted grid
         
         # Initialize PlotManager
         self.plot_manager = PlotManager(self.plot_placeholder)
 
-        # Iteration Table Frame
-        self.iteration_table_frame = ctk.CTkScrollableFrame(self.viz_frame, label_text="Iteration Steps", corner_radius=5)
-        self.iteration_table_frame.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
-        self.iteration_table_frame.grid_columnconfigure(0, weight=1) # For column headers
-        
-        self.iteration_labels = [] # To store references to iteration table labels
-        self._create_iteration_table_headers()
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
         # Solvers mapping
         self.solvers = {
@@ -243,8 +241,7 @@ class RootFinderPage(ctk.CTkFrame):
         selected_example = next((ex for ex in examples_for_method if ex["name"] == example_name), None)
 
         if selected_example:
-            self.func_entry.delete(0, ctk.END)
-            self.func_entry.insert(0, selected_example.get("expression", ""))
+            self.func_input.set_expression(selected_example.get("expression", ""))
             
             self.tol_entry.delete(0, ctk.END)
             self.tol_entry.insert(0, selected_example.get("tol", "1e-6"))
@@ -262,3 +259,134 @@ class RootFinderPage(ctk.CTkFrame):
                 self.input1_entry.insert(0, selected_example.get("x0", ""))
         else:
             self.error_label.configure(text=f"Error: Example '{example_name}' not found for method '{method}'.")
+
+    def update_inputs(self, method):
+        """Updates the input fields based on the selected method."""
+        # Reset labels and grid visibility
+        if method == "Bisection":
+            self.input1_label.configure(text="Lower Bound (a):")
+            self.input2_label.configure(text="Upper Bound (b):")
+            self.input2_label.grid(row=11, column=0, padx=20, pady=(10, 0), sticky="w")
+            self.input2_entry.grid(row=12, column=0, padx=20, pady=(0, 10), sticky="ew")
+        elif method == "Secant":
+            self.input1_label.configure(text="First Guess (x0):")
+            self.input2_label.configure(text="Second Guess (x1):")
+            self.input2_label.grid(row=11, column=0, padx=20, pady=(10, 0), sticky="w")
+            self.input2_entry.grid(row=12, column=0, padx=20, pady=(0, 10), sticky="ew")
+        elif method == "Newton-Raphson":
+            self.input1_label.configure(text="Initial Guess (x0):")
+            self.input2_label.grid_forget()
+            self.input2_entry.grid_forget()
+            self.func_input.label.configure(text="Equation f(x):")
+        elif method == "Simple Iteration":
+            self.input1_label.configure(text="Initial Guess (x0):")
+            self.input2_label.grid_forget()
+            self.input2_entry.grid_forget()
+            self.func_input.label.configure(text="Iteration Function g(x):")
+        
+        if method != "Simple Iteration":
+            self.func_input.label.configure(text="Equation f(x):")
+
+        # Update examples menu
+        examples = self.EXAMPLE_PROBLEMS.get(method, [])
+        if examples:
+            self.example_menu.configure(values=[ex["name"] for ex in examples])
+            self.example_menu.set(examples[0]["name"])
+        else:
+            self.example_menu.configure(values=["No Examples Available"])
+            self.example_menu.set("No Examples Available")
+
+    def solve_action(self):
+        """Triggers the root finder solver and updates visualization."""
+        self.error_label.configure(text="")
+        method = self.method_menu.get()
+        expression = self.func_input.get_expression()
+
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            start_time = math.perf_counter() if hasattr(math, "perf_counter") else 0 # Fallback
+            import time
+            start_time = time.perf_counter()
+
+            tol = float(self.tol_entry.get() or 1e-6)
+            solver = self.solvers[method]
+
+            kwargs = {
+                "expression": expression,
+                "tolerance": tol,
+                "max_iterations": 100
+            }
+
+            if method == "Bisection":
+                kwargs["a"] = float(self.input1_entry.get())
+                kwargs["b"] = float(self.input2_entry.get())
+            elif method == "Secant":
+                kwargs["x0"] = float(self.input1_entry.get())
+                kwargs["x1"] = float(self.input2_entry.get())
+            elif method == "Newton-Raphson" or method == "Simple Iteration":
+                kwargs["initial_guess"] = float(self.input1_entry.get())
+
+            data = solver.solve(**kwargs)
+            steps = solver.get_steps()
+
+            end_time = time.perf_counter()
+            comp_time = end_time - start_time
+
+            # Update Dashboard status
+            if hasattr(self.master.master, "update_status"):
+                self.master.master.update_status(f"{method} Solver", comp_time)
+
+            # Update Result Panel (Methodology Table)
+            self.result_panel.update_result(data, steps)
+
+            # Visualization
+            viz_type = self.viz_type_menu.get()
+            if viz_type == "Solution Path":
+                self.plot_manager.plot_solution_path(steps, expression if method != "Simple Iteration" else None)
+            else:
+                self.plot_manager.plot_iteration_history(steps)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Runs all compatible root finders and shows comparison."""
+        self.error_label.configure(text="")
+        expression = self.func_input.get_expression()
+
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            tol = float(self.tol_entry.get() or 1e-6)
+            runner = ComparisonRunner(self.solvers)
+
+            kwargs = {
+                "expression": expression,
+                "tolerance": tol,
+                "max_iterations": 100
+            }
+
+            # Try to gather all possible inputs
+            try: kwargs["a"] = float(self.input1_entry.get())
+            except: pass
+            try: kwargs["b"] = float(self.input2_entry.get())
+            except: pass
+            try: kwargs["x0"] = float(self.input1_entry.get())
+            except: pass
+            try: kwargs["x1"] = float(self.input2_entry.get())
+            except: pass
+            try: kwargs["initial_guess"] = float(self.input1_entry.get())
+            except: pass
+
+            comparison_result = runner.run_comparison(**kwargs)
+
+            # Show SmartSolverPanel
+            SmartSolverPanel(self, comparison_result)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")
