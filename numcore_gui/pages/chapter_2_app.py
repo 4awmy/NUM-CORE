@@ -93,17 +93,15 @@ class Chapter2AppPage(ctk.CTkFrame):
             
             solution = data.metadata.get("solution")
             
-            # Create plot data for branch currents
-            plot_data = SimulationData(
+            # Use plot_bar for solution vector
+            labels = [f"I{i+1}" for i in range(len(solution))]
+            self.plot_manager.plot_bar(
+                x=labels, 
+                y=solution, 
                 title="Branch Current Distribution",
-                x_data=list(range(1, len(solution) + 1)),
-                y_data=solution,
-                metadata={"scatter_x": list(range(1, len(solution) + 1)), "scatter_y": solution}
+                xlabel="Current Branch",
+                ylabel="Current (A)"
             )
-            self.plot_manager.plot_static(plot_data)
-            self.plot_manager.ax.set_xlabel("Branch Index")
-            self.plot_manager.ax.set_ylabel("Current (A)")
-            self.plot_manager.canvas.draw()
             
             sol_text = "\n".join([f"I{i+1} = {val:.4f} A" for i, val in enumerate(solution)])
             

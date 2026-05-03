@@ -95,22 +95,19 @@ class Chapter3AppPage(ctk.CTkFrame):
             data = self.solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
             res_y = data.y_data[0] if isinstance(data.y_data, list) else data.y_data
             
-            # Generate smooth curve for plotting
-            x_smooth = np.linspace(min(x_points), max(x_points), 100).tolist()
-            smooth_data = self.solver.solve(x_points=x_points, y_points=y_points, target_x=x_smooth)
+            # Use enhanced plot_interpolation_result
+            points = list(zip(x_points, y_points))
             
-            plot_data = SimulationData(
-                title="Interpolated Pressure Curve",
-                x_data=x_smooth,
-                y_data=smooth_data.y_data,
-                metadata={"scatter_x": x_points, "scatter_y": y_points}
+            # Create a lambda for the polynomial function
+            def poly_f(x):
+                res = self.solver.solve(x_points=x_points, y_points=y_points, target_x=x)
+                return res.y_data[0] if isinstance(res.y_data, list) else res.y_data
+
+            self.plot_manager.plot_interpolation_result(
+                points=points,
+                polynomial_f=poly_f,
+                target_x=target_x
             )
-            self.plot_manager.plot_static(plot_data)
-            
-            # Manually highlight the target point
-            self.plot_manager.ax.scatter([target_x], [res_y], color='red', s=100, zorder=6, label="Target Point")
-            self.plot_manager.ax.legend()
-            self.plot_manager.canvas.draw()
             
             self.result_label.configure(text=f"Estimated Pressure at {target_x}°C:\n{res_y:.4f} kPa")
         except Exception as e:

@@ -204,7 +204,7 @@ class InterpolationPage(ctk.CTkFrame):
                 # Plotting requires a solver that can evaluate at arbitrary x values
                 plot_solver = self.solvers[method] 
                 poly_f = lambda x: plot_solver.solve(x_points=x_points, y_points=y_points, target_x=float(x)).y_data[0]
-                self.plot_manager.plot_interpolation_result(points, poly_f)
+                self.plot_manager.plot_interpolation_result(points, poly_f, target_x=target_x)
             else: # For Newton Forward Difference, just plot the original points
                  self.plot_manager.ax.scatter(x_points, y_points, color='#ff7f0e', s=50, zorder=5, label="Data Points")
                  self.plot_manager.ax.set_title("Original Points for Newton Forward Difference")
