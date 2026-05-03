@@ -1,0 +1,10 @@
+# NUM-CORE True Black Matplotlib Style
+figure.facecolor: 000000
+axes.facecolor: 000000
+axes.edgecolor: 333333
+axes.labelcolor: ffffff
+xtick.color: ffffff
+ytick.color: ffffff
+text.color: ffffff
+grid.color: 333333
+axes.prop_cycle: cycler('color', ['4fc3f7', 'ff9800', '4caf50', 'f44336', '9c27b0', '3f51b5'])
