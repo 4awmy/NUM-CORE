@@ -2,9 +2,10 @@ from typing import Any, Dict, List, Optional
 from ..interfaces import Solver
 from ..models import NumericalStep, SimulationData
 from ..parser import SymbolicParser
+from .calculus_engine import NumericalDifferentiationSolver
 
 
-class BisectionSolver:
+class BisectionSolver(Solver):
     """
     Bisection method for finding roots of a function f(x) = 0.
     Requires an interval [a, b] such that f(a) * f(b) < 0.
@@ -48,18 +49,29 @@ class BisectionSolver:
         x_history: List[float] = []
         y_history: List[float] = []
 
-        c = a
+        curr_a = a
+        curr_b = b
+        curr_fa = fa
+        curr_fb = fb
+
         for i in range(max_iterations):
-            c = (a + b) / 2
+            c = (curr_a + curr_b) / 2
             fc = f(c)
 
-            error = abs(b - a) / 2
+            error = abs(curr_b - curr_a) / 2
 
             step = NumericalStep(
                 step_idx=i,
                 value=c,
                 error=error,
-                details={"a": a, "b": b, "f(c)": fc},
+                details={
+                    "a": float(curr_a),
+                    "b": float(curr_b),
+                    "c": float(c),
+                    "f(a)": float(curr_fa),
+                    "f(b)": float(curr_fb),
+                    "f(c)": float(fc),
+                },
             )
             self._steps.append(step)
             x_history.append(float(i))
@@ -68,12 +80,12 @@ class BisectionSolver:
             if error < tolerance or abs(fc) < 1e-12:
                 break
 
-            if fa * fc < 0:
-                b = c
-                fb = fc
+            if curr_fa * fc < 0:
+                curr_b = c
+                curr_fb = fc
             else:
-                a = c
-                fa = fc
+                curr_a = c
+                curr_fa = fc
 
         return SimulationData(
             title="Bisection Convergence",
@@ -91,7 +103,7 @@ class BisectionSolver:
         return "expression" in kwargs and "a" in kwargs and "b" in kwargs
 
 
-class NewtonRaphsonSolver:
+class NewtonRaphsonSolver(Solver):
     """
     Newton-Raphson method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) / f'(x_n)
@@ -123,8 +135,16 @@ class NewtonRaphsonSolver:
 
         # Parse f(x) and its derivative f'(x)
         f = SymbolicParser.parse_expression(expression)
-        derivative_expr = SymbolicParser.get_derivative(expression)
-        df = SymbolicParser.parse_expression(derivative_expr)
+        try:
+            derivative_expr = SymbolicParser.get_derivative(expression)
+            df = SymbolicParser.parse_expression(derivative_expr)
+        except Exception:
+            # Fallback to numerical differentiation using calculus_engine
+            diff_solver = NumericalDifferentiationSolver()
+
+            def df(x: float) -> float:
+                res = diff_solver.solve(f=f, x=x, h=1e-7, method="central")
+                return float(res.y_data[0])
 
         self._steps = []
         x_history: List[float] = []
@@ -182,7 +202,7 @@ class NewtonRaphsonSolver:
         return "expression" in kwargs and "initial_guess" in kwargs
 
 
-class SecantSolver:
+class SecantSolver(Solver):
     """
     Secant method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) * (x_n - x_{n-1}) / (f(x_n) - f(x_{n-1}))
@@ -236,7 +256,13 @@ class SecantSolver:
                 step_idx=i,
                 value=x_next,
                 error=error,
-                details={"x0": x0, "x1": x1, "f(x1)": fx1},
+                details={
+                    "x0": float(x0),
+                    "x1": float(x1),
+                    "f(x0)": float(fx0),
+                    "f(x1)": float(fx1),
+                    "x2": float(x_next),
+                },
             )
             self._steps.append(step)
             x_history.append(float(i))
@@ -271,7 +297,7 @@ class SecantSolver:
         return "expression" in kwargs and "x0" in kwargs and "x1" in kwargs
 
 
-class SimpleIterationSolver:
+class SimpleIterationSolver(Solver):
     """
     Simple Iteration (Fixed Point) method for finding roots of x = g(x).
     Formula: x_{n+1} = g(x_n)
@@ -303,6 +329,20 @@ class SimpleIterationSolver:
 
         # Parse g(x)
         g = SymbolicParser.parse_expression(expression)
+
+        # Convergence check: |g'(x)| < 1
+        convergence_passed = True
+        try:
+            dg_expr = SymbolicParser.get_derivative(expression)
+            dg = SymbolicParser.parse_expression(dg_expr)
+            if abs(dg(x_n)) >= 1:
+                convergence_passed = False
+        except Exception:
+            # Fallback to numerical derivative for check
+            diff_solver = NumericalDifferentiationSolver()
+            res = diff_solver.solve(f=g, x=x_n, h=1e-7, method="central")
+            if abs(res.y_data[0]) >= 1:
+                convergence_passed = False
 
         self._steps = []
         x_history: List[float] = []
@@ -341,7 +381,12 @@ class SimpleIterationSolver:
             title="Simple Iteration Convergence",
             x_data=x_history,
             y_data=y_history,
-            metadata={"root": x_n, "iterations": len(self._steps), "diverged": diverged},
+            metadata={
+                "root": x_n,
+                "iterations": len(self._steps),
+                "diverged": diverged,
+                "convergence_check_passed": convergence_passed,
+            },
         )
 
     def get_steps(self) -> List[NumericalStep]:
