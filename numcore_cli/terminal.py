@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
@@ -33,8 +34,22 @@ class NumericalCLI:
     def __init__(self):
         self.console = Console()
         self.formatter = NumericalFormatter()
+        self.last_steps: List[Any] = []
         self.theme_color = "cyan"
         self.accent_color = "bold magenta"
+
+    def get_steps_from_result(self) -> List[Any]:
+        """Return the steps from the last executed solver."""
+        return self.last_steps
+
+    def ask_export(self, steps: List[Any], method_name: str):
+        """Offer CSV export for the given steps."""
+        if not steps:
+            return
+            
+        if Prompt.ask("\nExport steps to CSV? (y/n)", choices=["y", "n"], default="n") == "y":
+            filename = self.formatter.export_steps_to_csv(steps, method_name)
+            self.console.print(f"[bold green]Successfully exported to {filename}[/bold green]")
 
     def clear_screen(self):
         """Clear the terminal screen."""
@@ -168,14 +183,14 @@ class NumericalCLI:
         solver = EulerSolver()
         try:
             result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
-            steps_data = solver.get_steps()
-            self.formatter.display_euler_steps(steps_data)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_euler_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps_data, "Euler")
+            self.ask_export(self.get_steps_from_result(), "Euler")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -212,14 +227,14 @@ class NumericalCLI:
         solver = RungeKuttaSolver()
         try:
             result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
-            steps_data = solver.get_steps()
-            self.formatter.display_rk4_steps(steps_data)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_rk4_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps_data, "RK4")
+            self.ask_export(self.get_steps_from_result(), "RK4")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -259,14 +274,14 @@ class NumericalCLI:
         solver = LeastSquaresSolver()
         try:
             result = solver.solve(x_points=x_points, y_points=y_points)
-            steps_data = solver.get_steps()
-            self.formatter.display_least_squares_steps(steps_data)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_least_squares_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Equation: {result.metadata['equation']}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps_data, "Least-Squares")
+            self.ask_export(self.get_steps_from_result(), "Least-Squares")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -335,15 +350,15 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
-            steps = solver.get_steps()
-            self.formatter.display_newton_raphson_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_newton_raphson_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Newton-Raphson")
+            self.ask_export(self.get_steps_from_result(), "Newton-Raphson")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -386,33 +401,19 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
-            steps = solver.get_steps()
-            self.formatter.display_simple_iteration_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_simple_iteration_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']}",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Simple Iteration")
+            self.ask_export(self.get_steps_from_result(), "Simple Iteration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
         Prompt.ask("\nPress Enter to return to menu")
-
-    def display_result_and_export(self, result: Any, steps: List[Any], method_name: str):
-        """Display result, check for divergence, and offer CSV export."""
-        if result.metadata.get("diverged"):
-            self.console.print(Panel(
-                "[bold red]WARNING: The method appears to be diverging![/bold red]\n"
-                "The error is increasing instead of decreasing. Results may be unreliable.",
-                title="Divergence Warning",
-                border_style="red"
-            ))
-
-        if Prompt.ask("Export steps to CSV? (y/n)", choices=["y", "n"], default="n") == "y":
-            filename = self.formatter.export_steps_to_csv(steps, method_name)
-            self.console.print(f"[bold green]Successfully exported to {filename}[/bold green]")
 
     def network_solver_menu(self):
         """Network solver submenu."""
@@ -504,6 +505,10 @@ class NumericalCLI:
             self.console.print(f"Jacobi: {res_j.y_data}")
             self.console.print(f"Gauss-Seidel: {res_gs.y_data}")
 
+            # Store Gauss-Seidel steps as primary for export comparison
+            self.last_steps = gs.get_steps()
+            self.ask_export(self.get_steps_from_result(), "Comparison")
+
         except Exception as e:
             self.console.print(f"[bold red]Error during comparison: {str(e)}[/bold red]")
 
@@ -585,14 +590,14 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
-            steps = solver.get_steps()
-            self.formatter.display_linear_steps(steps, method_name="Gauss-Seidel")
+            self.last_steps = solver.get_steps()
+            self.formatter.display_linear_steps(self.last_steps, method_name="Gauss-Seidel")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Gauss-Seidel")
+            self.ask_export(self.get_steps_from_result(), "Gauss-Seidel")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -674,8 +679,8 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
-            steps = solver.get_steps()
-            self.formatter.display_linear_steps(steps, method_name="Jacobi")
+            self.last_steps = solver.get_steps()
+            self.formatter.display_linear_steps(self.last_steps, method_name="Jacobi")
             self.console.print(Panel(
                 f"[bold green]Solution found: {result.y_data}[/bold green]\n"
                 f"Iterations: {result.metadata['iterations']} | "
@@ -683,7 +688,7 @@ class NumericalCLI:
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Jacobi")
+            self.ask_export(self.get_steps_from_result(), "Jacobi")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -761,14 +766,14 @@ class NumericalCLI:
                 y_points=y_points,
                 target_x=target_x
             )
-            steps = solver.get_steps()
-            self.formatter.display_interpolation_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_interpolation_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Interpolated values: {result.y_data}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Interpolation")
+            self.ask_export(self.get_steps_from_result(), "Interpolation")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         
@@ -820,14 +825,14 @@ class NumericalCLI:
                 y_points=y_points,
                 method=method
             )
-            steps = solver.get_steps()
-            self.formatter.display_integration_steps(steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_integration_steps(self.last_steps)
             self.console.print(Panel(
                 f"[bold green]Total Integral: {result.metadata['total_integral']:.8f}[/bold green]",
                 title="Result",
                 border_style="green"
             ))
-            self.display_result_and_export(result, steps, "Integration")
+            self.ask_export(self.get_steps_from_result(), "Integration")
         except Exception as e:
             self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
         

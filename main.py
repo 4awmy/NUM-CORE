@@ -109,8 +109,11 @@ Examples:
         print("\n[SYSTEM] Interrupted by user. Exiting...")
         sys.exit(0)
     except Exception as e:
-        print(f"[CRITICAL ERROR] {str(e)}")
+        import traceback
+        print(f"\n[CRITICAL ERROR] {str(e)}")
+        traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

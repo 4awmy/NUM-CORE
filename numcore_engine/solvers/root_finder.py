@@ -5,7 +5,7 @@ from ..parser import SymbolicParser
 from .calculus_engine import NumericalDifferentiationSolver
 
 
-class BisectionSolver:
+class BisectionSolver(Solver):
     """
     Bisection method for finding roots of a function f(x) = 0.
     Requires an interval [a, b] such that f(a) * f(b) < 0.
@@ -99,7 +99,7 @@ class BisectionSolver:
         return "expression" in kwargs and "a" in kwargs and "b" in kwargs
 
 
-class NewtonRaphsonSolver:
+class NewtonRaphsonSolver(Solver):
     """
     Newton-Raphson method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) / f'(x_n)
@@ -198,7 +198,7 @@ class NewtonRaphsonSolver:
         return "expression" in kwargs and "initial_guess" in kwargs
 
 
-class SecantSolver:
+class SecantSolver(Solver):
     """
     Secant method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) * (x_n - x_{n-1}) / (f(x_n) - f(x_{n-1}))
@@ -293,7 +293,7 @@ class SecantSolver:
         return "expression" in kwargs and "x0" in kwargs and "x1" in kwargs
 
 
-class SimpleIterationSolver:
+class SimpleIterationSolver(Solver):
     """
     Simple Iteration (Fixed Point) method for finding roots of x = g(x).
     Formula: x_{n+1} = g(x_n)
@@ -381,7 +381,7 @@ class SimpleIterationSolver:
                 "root": x_n,
                 "iterations": len(self._steps),
                 "diverged": diverged,
-                "convergence_passed": convergence_passed,
+                "convergence_check_passed": convergence_passed,
             },
         )
 

@@ -9,7 +9,7 @@
 
 ## Collaboration & PR Workflow Rules
 - **Draft PRs**: Always create a Draft PR first using `gh pr create --draft`. Follow this immediately with a self-review comment on the PR.
-- **Review Tagging**: Once a task or phase is complete, tag `@Copilot` in the PR comments requesting a review against `CLAUDE.md` architecture constraints.
+- **Review Tagging**: Once a task or phase is complete, tag `@Claude` in the PR comments requesting a review against `CLAUDE.md` architecture constraints.
 - **Debating Feedback**: Proactively debate feedback in PR comments. Defend correct patterns or acknowledge and fix valid issues rather than blindly accepting all suggestions.
 - **Clean Merges**: Use `gh pr merge --squash --delete-branch` for the final merge of approved PRs.
 - **Role Consolidation**: Ignore constraints regarding "2 students" or DevA/DevB roles. Handle all tasks as a single orchestrator.

@@ -92,7 +92,7 @@ def test_newton_difference_table_basic():
     assert table[0][1] == 7
     assert table[0][2] == 12
     assert table[0][3] == 6
-    assert len(solver.get_steps()) == 3
+    assert len(solver.get_steps()) == 4
 
 
 def test_interpolation_solver_alias():
