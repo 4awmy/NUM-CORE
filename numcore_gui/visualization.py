@@ -7,6 +7,7 @@ import numpy as np
 from typing import List, Any, Callable
 from numcore_engine.models import SimulationData, NumericalStep
 from numcore_engine.parser import SymbolicParser
+from numcore_gui.theme import BLACK, PANEL, BORDER, TEXT_PRIMARY, ACCENT_BLUE
 
 class PlotManager:
     """
@@ -37,23 +38,24 @@ class PlotManager:
 
     def _apply_dark_theme(self):
         """Applies a dark theme to the matplotlib figure to match CustomTkinter."""
-        self.figure.patch.set_facecolor('#2b2b2b')
-        self.ax.set_facecolor('#2b2b2b')
+        self.figure.patch.set_facecolor(BLACK)
+        self.ax.set_facecolor(BLACK)
         self.ax.tick_params(colors='white')
         self.ax.xaxis.label.set_color('white')
         self.ax.yaxis.label.set_color('white')
         self.ax.title.set_color('white')
         for spine in self.ax.spines.values():
-            spine.set_edgecolor('white')
+            spine.set_edgecolor(BORDER)
 
     def _style_toolbar(self):
         """Attempts to style the standard Tkinter toolbar to match the dark theme."""
-        self.toolbar.config(background='#2b2b2b')
+        self.toolbar.config(background=PANEL)
         for child in self.toolbar.winfo_children():
             try:
-                child.config(background='#2b2b2b', foreground='white')
+                child.config(background=PANEL, foreground='white')
             except:
                 pass
+
 
     def plot_static(self, data: SimulationData):
         """Renders a static plot from SimulationData."""

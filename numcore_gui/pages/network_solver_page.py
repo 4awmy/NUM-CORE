@@ -3,18 +3,19 @@ from typing import List
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData, NumericalStep
 from numcore_gui.help_system import HelpProvider
+from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.network_solver import GaussSeidelSolver, JacobiSolver
 
 class NetworkSolverPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 2: Linear Systems", font=ctk.CTkFont(size=18, weight="bold"))
@@ -55,7 +56,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.load_example_optionmenu.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Frame for dynamic matrix and vector entries
-        self.matrix_input_frame = ctk.CTkScrollableFrame(self.input_frame, label_text="Coefficient Matrix (A) and Constant Vector (b)")
+        self.matrix_input_frame = ctk.CTkScrollableFrame(self.input_frame, label_text="Coefficient Matrix (A) and Constant Vector (b)", fg_color=BLACK)
         self.matrix_input_frame.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="nsew")
         self.input_frame.grid_rowconfigure(7, weight=1) # Allow matrix input frame to expand
 
@@ -79,7 +80,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.solve_button.grid(row=11, column=0, padx=20, pady=20)
 
         # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
+        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
         self.results_panel.grid(row=12, column=0, padx=20, pady=10, sticky="nsew")
         self.results_panel.grid_columnconfigure(0, weight=1)
         
@@ -94,7 +95,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.error_label.grid(row=13, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=6) # 60% for plot
         self.viz_frame.grid_rowconfigure(1, weight=4) # 40% for iteration table
@@ -103,20 +104,21 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.viz_label = ctk.CTkLabel(self.viz_frame, text="Matrix Heatmap / Convergence", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.grid(row=0, column=0, padx=20, pady=(10,0), sticky="n")
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
         self.plot_placeholder.grid(row=0, column=0, padx=20, pady=(40, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
 
         # Iteration Table Frame
-        self.iteration_table_frame = ctk.CTkFrame(self.viz_frame, corner_radius=5)
+        self.iteration_table_frame = ctk.CTkFrame(self.viz_frame, corner_radius=5, fg_color=BLACK)
         self.iteration_table_frame.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="nsew")
         self.iteration_table_frame.grid_columnconfigure(0, weight=1)
         self.iteration_table_frame.grid_rowconfigure(0, weight=1)
 
-        self.iteration_table_scrollable_frame = ctk.CTkScrollableFrame(self.iteration_table_frame, label_text="Iteration History")
+        self.iteration_table_scrollable_frame = ctk.CTkScrollableFrame(self.iteration_table_frame, label_text="Iteration History", fg_color=BLACK)
         self.iteration_table_scrollable_frame.pack(fill="both", expand=True, padx=5, pady=5)
         self.iteration_table_scrollable_frame.grid_columnconfigure(0, weight=1) # Make first column (Iter) expand
+
 
         # Solvers mapping
         self.solvers = {

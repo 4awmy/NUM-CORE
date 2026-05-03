@@ -2,9 +2,9 @@ import customtkinter as ctk
 import ast
 import numpy as np
 import re
-import textwrap
 from numcore_gui.visualization import PlotManager
-from numcore_engine.models import SimulationData
+from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.calculus_engine import (
     LagrangeInterpolationSolver,
@@ -16,7 +16,7 @@ from numcore_engine.solvers.calculus_engine import (
 
 class InterpolationPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
@@ -34,7 +34,7 @@ class InterpolationPage(ctk.CTkFrame):
         self.example_problems = self._load_example_problems_from_md()
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
 
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 4: Interpolation", font=ctk.CTkFont(size=18, weight="bold"))
@@ -70,6 +70,45 @@ class InterpolationPage(ctk.CTkFrame):
         )
         self.load_examples_menu.set("Load Example")
         self.load_examples_menu.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        # Input Fields
+        self.x_label = ctk.CTkLabel(self.input_frame, text="X Points (list):")
+        self.x_label.grid(row=5, column=0, padx=20, pady=(10, 0), sticky="w")
+        self.x_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., [1, 2, 3]")
+        self.x_entry.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        self.y_label = ctk.CTkLabel(self.input_frame, text="Y Points (list):")
+        self.y_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
+        self.y_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., [0.5, 2.1, 4.2]")
+        self.y_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        self.target_label = ctk.CTkLabel(self.input_frame, text="Target X (optional):")
+        self.target_label.grid(row=9, column=0, padx=20, pady=(10, 0), sticky="w")
+        self.target_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., 1.5")
+        self.target_entry.grid(row=10, column=0, padx=20, pady=(0, 10), sticky="ew")
+
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Interpolate", command=self.solve_action)
+        self.solve_button.grid(row=11, column=0, padx=20, pady=20)
+
+        # Inline Error Display
+        self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
+        self.error_label.grid(row=12, column=0, padx=20, pady=5, sticky="w")
+
+        # Right Panel: Visualization
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
+        self.viz_frame.grid_rowconfigure(0, weight=1)
+        self.viz_frame.grid_rowconfigure(1, weight=1)
+        self.viz_frame.grid_columnconfigure(0, weight=1)
+        
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        
+        self.plot_manager = PlotManager(self.plot_placeholder)
+
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
     def _load_example_problems_from_md(self) -> list:
         try:
@@ -133,11 +172,7 @@ class InterpolationPage(ctk.CTkFrame):
     def solve_action(self):
         """Triggers the numerical interpolation solver and updates the plot."""
         self.error_label.configure(text="")
-        self.result_label.configure(text="") # Clear previous results
-        # Clear and hide difference table
-        for widget in self.difference_table_frame.winfo_children():
-            widget.destroy()
-        self.difference_table_frame.pack_forget()
+        self.result_panel.clear()
 
         method = self.method_menu.get()
         
@@ -145,82 +180,36 @@ class InterpolationPage(ctk.CTkFrame):
             x_points = ast.literal_eval(self.x_entry.get())
             y_points = ast.literal_eval(self.y_entry.get())
             target_x_str = self.target_entry.get().strip()
-            target_x = float(target_x_str) if target_x_str else None # Define target_x here for scope
+            target_x = float(target_x_str) if target_x_str else None
 
             solver = self.solvers[method]
             data = None
-            interpolated_y = None
             
             if method == "Newton Forward Difference":
-                # NFD table solver does not take target_x for its primary solve method
                 data = solver.solve(x_points=x_points, y_points=y_points)
-                if target_x_str: # Warn if target_x was provided, but not used by NFD table solver
+                if target_x_str:
                     self.error_label.configure(text="Warning: Target X is not directly computed by Newton Forward Difference Table method. Displaying table only.")
-            else: # Lagrange or Newton Divided Difference
-                data = solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
-                if target_x is not None:
-                    interpolated_y = data.y_data[0] if isinstance(data.y_data, list) else data.y_data
-                # else: interpolated_y remains None
-
-
-            # Update results
-            if interpolated_y is not None:
-                self.result_label.configure(text=f"Interpolated value at x={target_x}: {interpolated_y:.6f}")
-            elif data and (data.y_data is not None) and (len(data.y_data) > 0): 
-                 # If solve was successful and returned y_data (e.g., initial points for NFD without target_x)
-                 self.result_label.configure(text="Computation successful.")
             else:
-                self.result_label.configure(text="No specific interpolated value computed.")
+                data = solver.solve(x_points=x_points, y_points=y_points, target_x=target_x)
+
+            steps = solver.get_steps()
+            self.result_panel.update_result(data, steps)
 
             # Clear previous plot
-            self.plot_manager.clear_plot()
+            self.plot_manager.ax.clear()
 
-            # Display Difference Table for Newton Forward Difference
-            if method == "Newton Forward Difference" and "difference_table" in data.metadata:
-                self.difference_table_frame.pack(padx=20, pady=(10, 20), fill="both", expand=False)
-                table_data = np.array(data.metadata["difference_table"])
-                
-                for widget in self.difference_table_frame.winfo_children():
-                    widget.destroy()
-
-                # Headers for X, Y, and differences
-                ctk.CTkLabel(self.difference_table_frame, text="X", font=ctk.CTkFont(weight="bold")).grid(row=0, column=0, padx=5, pady=2, sticky="ew")
-                ctk.CTkLabel(self.difference_table_frame, text="Y", font=ctk.CTkFont(weight="bold")).grid(row=0, column=1, padx=5, pady=2, sticky="ew")
-                
-                max_diff_cols = 0
-                if len(table_data) > 0:
-                    max_diff_cols = table_data.shape[1] # Number of columns in the difference table, including y values
-
-                for i in range(max_diff_cols -1): # Column 0 is Y, rest are differences
-                    ctk.CTkLabel(self.difference_table_frame, text=f"Δ^{i+1}Y", font=ctk.CTkFont(weight="bold")).grid(row=0, column=i+2, padx=5, pady=2, sticky="ew")
-                
-                # Populate table with data
-                for r_idx, row in enumerate(table_data):
-                    # Display X point
-                    ctk.CTkLabel(self.difference_table_frame, text=f"{x_points[r_idx]:.4f}").grid(row=r_idx + 1, column=0, padx=5, pady=2, sticky="ew")
-                    
-                    # Display Y point (first column of the table_data corresponds to Y values)
-                    ctk.CTkLabel(self.difference_table_frame, text=f"{row[0]:.6f}").grid(row=r_idx + 1, column=1, padx=5, pady=2, sticky="ew")
-
-                    # Display differences
-                    for c_idx, val in enumerate(row[1:]): # Iterate over difference columns
-                        if not np.isnan(val):
-                            ctk.CTkLabel(self.difference_table_frame, text=f"{val:.6f}").grid(row=r_idx + 1, column=c_idx + 2, padx=5, pady=2, sticky="ew")
-            else:
-                self.difference_table_frame.pack_forget()
-            
             # Plotting logic for interpolation curves
             points = list(zip(x_points, y_points))
             if method in ["Lagrange Interpolation", "Newton Divided Difference", "Linear Interpolation", "Cubic Spline Interpolation"]:
-                x_min, x_max = min(x_points), max(x_points)
-                x_smooth = np.linspace(x_min, x_max, 100).tolist()
-                
                 # Plotting requires a solver that can evaluate at arbitrary x values
                 plot_solver = self.solvers[method] 
                 poly_f = lambda x: plot_solver.solve(x_points=x_points, y_points=y_points, target_x=float(x)).y_data[0]
                 self.plot_manager.plot_interpolation_result(points, poly_f)
             else: # For Newton Forward Difference, just plot the original points
-                 self.plot_manager.plot_points(points, title="Original Points for Newton Forward Difference")
+                 self.plot_manager.ax.scatter(x_points, y_points, color='#ff7f0e', s=50, zorder=5, label="Data Points")
+                 self.plot_manager.ax.set_title("Original Points for Newton Forward Difference")
+                 self.plot_manager.ax.legend()
+                 self.plot_manager.canvas.draw()
 
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")

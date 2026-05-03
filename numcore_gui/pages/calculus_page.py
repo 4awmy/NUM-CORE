@@ -2,8 +2,11 @@ import customtkinter as ctk
 import numpy as np
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData
+from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.parser import SymbolicParser
+from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.calculus_engine import (
     TrapezoidalSolver,
     SimpsonsRuleSolver,
@@ -14,14 +17,14 @@ from numcore_engine.solvers.calculus_engine import (
 
 class CalculusPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 3: Numerical Calculus", font=ctk.CTkFont(size=18, weight="bold"))
@@ -72,32 +75,35 @@ class CalculusPage(ctk.CTkFrame):
         self.solve_button = ctk.CTkButton(self.input_frame, text="Execute Mission", command=self.solve_action)
         self.solve_button.grid(row=9, column=0, padx=20, pady=20)
 
-        # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
-        self.results_panel.grid(row=10, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=11, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=10, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
-        
-        self.viz_label = ctk.CTkLabel(self.viz_frame, text="Function Visualization", font=ctk.CTkFont(size=16, weight="bold"))
-        self.viz_label.pack(pady=20)
+        self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
+        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
+        self.viz_frame.grid_columnconfigure(0, weight=1)
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
-        self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
+        # Plot Container
+        self.plot_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.plot_container.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="nsew")
+        self.plot_container.grid_columnconfigure(0, weight=1)
+        self.plot_container.grid_rowconfigure(0, weight=1)
+
+        self.viz_label = ctk.CTkLabel(self.plot_container, text="Function Visualization", font=ctk.CTkFont(size=16, weight="bold"))
+        self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10))
+
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
+
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+
 
         # Solvers mapping
         self.solvers = {
@@ -148,11 +154,13 @@ class CalculusPage(ctk.CTkFrame):
                 x = float(self.range_entry.get())
                 h = float(self.n_entry.get())
                 data = solver.solve(f=f, x=x, h=h, method="central")
+                steps = solver.get_steps()
                 
-                res = data.metadata.get("derivative")
-                self.result_label.configure(text=f"Derivative at x={x}: {res:.6f}")
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new derivative tangent plot
+                res = data.metadata.get("derivative")
                 self.plot_manager.plot_derivative_tangent(expression, x, res)
                 
             elif method == "Gaussian Quadrature":
@@ -160,9 +168,10 @@ class CalculusPage(ctk.CTkFrame):
                 a, b = map(float, r_str.split(","))
                 pts = int(self.n_entry.get())
                 data = solver.solve(f=f, a=a, b=b, points=pts)
+                steps = solver.get_steps()
                 
-                res = data.metadata.get("total_integral")
-                self.result_label.configure(text=f"Integral from {a} to {b}: {res:.6f}")
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new integration area plot
                 self.plot_manager.plot_integration_area(expression, a, b, method)
@@ -177,8 +186,10 @@ class CalculusPage(ctk.CTkFrame):
                     kwargs["method"] = "1/3" if "1/3" in method else "3/8"
                 
                 data = solver.solve(**kwargs)
-                res = data.metadata.get("total_integral")
-                self.result_label.configure(text=f"Integral from {a} to {b}: {res:.6f}")
+                steps = solver.get_steps()
+                
+                # Update Result Panel
+                self.result_panel.update_result(data, steps)
                 
                 # Use the new integration area plot
                 self.plot_manager.plot_integration_area(expression, a, b, method)

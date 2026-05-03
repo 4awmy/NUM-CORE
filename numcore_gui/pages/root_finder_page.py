@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import math
 from numcore_gui.visualization import PlotManager
+from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui.result_panel import ResultPanel
 
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.root_finder import (
@@ -108,14 +110,14 @@ class RootFinderPage(ctk.CTkFrame):
         ],
     }
     def __init__(self, master, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, fg_color=BLACK, **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 1: Root Finding", font=ctk.CTkFont(size=18, weight="bold"))
@@ -179,26 +181,15 @@ class RootFinderPage(ctk.CTkFrame):
         self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Equation", command=self.solve_action)
         self.solve_button.grid(row=15, column=0, padx=20, pady=20)
 
-        # Results area (Redesigned as a panel)
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
-        self.results_panel.grid(row=16, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=17, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=16, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
-        self.viz_frame.grid_rowconfigure(1, weight=1) # Table takes 1/2
+        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
         self.viz_frame.grid_columnconfigure(0, weight=1)
 
         # Plot Container
@@ -211,19 +202,15 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10)) # Adjust padding
 
         # Placeholder for Matplotlib plot
-        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color="gray20", corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
         self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew") # Adjusted grid
         
         # Initialize PlotManager
         self.plot_manager = PlotManager(self.plot_placeholder)
 
-        # Iteration Table Frame
-        self.iteration_table_frame = ctk.CTkScrollableFrame(self.viz_frame, label_text="Iteration Steps", corner_radius=5)
-        self.iteration_table_frame.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
-        self.iteration_table_frame.grid_columnconfigure(0, weight=1) # For column headers
-        
-        self.iteration_labels = [] # To store references to iteration table labels
-        self._create_iteration_table_headers()
+        # Result Panel (Methodology Table)
+        self.result_panel = ResultPanel(self.viz_frame)
+        self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
         # Solvers mapping
         self.solvers = {
@@ -299,38 +286,12 @@ class RootFinderPage(ctk.CTkFrame):
             self.example_menu.configure(values=["No Examples Available"])
             self.example_menu.set("No Examples Available")
 
-    def _create_iteration_table_headers(self):
-        """Creates headers for the iteration table."""
-        headers = ["Iter", "Value (x)", "Error", "Details"]
-        for i, header in enumerate(headers):
-            lbl = ctk.CTkLabel(self.iteration_table_frame, text=header, font=ctk.CTkFont(weight="bold"))
-            lbl.grid(row=0, column=i, padx=10, pady=5, sticky="nsew")
-
-    def _display_iteration_table(self, steps):
-        """Populates the iteration table with step data."""
-        # Clear existing rows (except headers)
-        for widget in self.iteration_table_frame.winfo_children():
-            try:
-                if int(widget.grid_info()["row"]) > 0:
-                    widget.destroy()
-            except (KeyError, ValueError):
-                pass
-
-        for i, step in enumerate(steps):
-            ctk.CTkLabel(self.iteration_table_frame, text=str(step.step_idx)).grid(row=i+1, column=0, padx=10, pady=2)
-            ctk.CTkLabel(self.iteration_table_frame, text=f"{step.value:.6f}").grid(row=i+1, column=1, padx=10, pady=2)
-            ctk.CTkLabel(self.iteration_table_frame, text=f"{step.error:.2e}").grid(row=i+1, column=2, padx=10, pady=2)
-            
-            # Format details string
-            details_str = ", ".join([f"{k}={v:.4f}" if isinstance(v, (float, int)) else f"{k}={v}" for k, v in step.details.items()])
-            ctk.CTkLabel(self.iteration_table_frame, text=details_str, font=ctk.CTkFont(size=10)).grid(row=i+1, column=3, padx=10, pady=2)
-
     def solve_action(self):
         """Triggers the root finder solver and updates visualization."""
         self.error_label.configure(text="")
         method = self.method_menu.get()
         expression = self.func_entry.get()
-        
+
         if not expression:
             self.error_label.configure(text="Error: Expression is required.")
             return
@@ -338,7 +299,7 @@ class RootFinderPage(ctk.CTkFrame):
         try:
             tol = float(self.tol_entry.get() or 1e-6)
             solver = self.solvers[method]
-            
+
             kwargs = {
                 "expression": expression,
                 "tolerance": tol,
@@ -357,19 +318,8 @@ class RootFinderPage(ctk.CTkFrame):
             data = solver.solve(**kwargs)
             steps = solver.get_steps()
 
-            # Update Table
-            self._display_iteration_table(steps)
-
-            # Update Results Panel
-            root = data.metadata.get("root")
-            iters = data.metadata.get("iterations")
-            diverged = data.metadata.get("diverged", False)
-            
-            status = "CONVERGED" if not diverged else "DIVERGED"
-            
-            self.result_label.configure(
-                text=f"Status: {status}\nRoot: {root:.6f}\nIterations: {iters}"
-            )
+            # Update Result Panel (Methodology Table)
+            self.result_panel.update_result(data, steps)
 
             # Visualization
             viz_type = self.viz_type_menu.get()

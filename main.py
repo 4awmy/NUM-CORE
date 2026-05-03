@@ -1,6 +1,9 @@
 import sys
 import argparse
+import os
+import matplotlib.pyplot as plt
 from rich.console import Console
+
 from rich.panel import Panel
 from rich.prompt import IntPrompt
 from rich.align import Align
@@ -64,7 +67,13 @@ def main():
     Main entry point for the NUM-CORE application.
     Parses arguments and launches the chosen interface.
     """
+    # Register custom Matplotlib style for True Black theme
+    style_path = os.path.join(os.path.dirname(__file__), "numcore_gui", "styles", "numcore_black.mplstyle")
+    if os.path.exists(style_path):
+        plt.style.use(style_path)
+
     parser = argparse.ArgumentParser(
+
         description="NUM-CORE: A Professional Numerical Computation Suite",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
