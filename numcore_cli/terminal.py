@@ -14,6 +14,9 @@ from numcore_engine.solvers import (
     SimpleIterationSolver,
     GaussSeidelSolver,
     JacobiSolver,
+    EulerSolver,
+    RungeKuttaSolver,
+    LeastSquaresSolver,
 )
 from numcore_engine.solvers.calculus_engine import (
     InterpolationSolver,
@@ -82,6 +85,7 @@ class NumericalCLI:
                 "Root Finding (Newton-Raphson, Simple Iteration)",
                 "Linear Systems (Gauss-Seidel, Jacobi)",
                 "Calculus (Interpolation, Integration)",
+                "ODE & Regression (Euler, RK4, Least Squares)",
                 "Exit"
             ]
             self.display_menu_options(options)
@@ -99,8 +103,174 @@ class NumericalCLI:
             elif choice == 3:
                 self.calculus_menu()
             elif choice == 4:
+                self.ode_regression_menu()
+            elif choice == 5:
                 self.console.print("[bold yellow]Exiting NUM-CORE. Goodbye![/bold yellow]")
                 break
+
+    def ode_regression_menu(self):
+        """ODE and Regression submenu."""
+        while True:
+            self.clear_screen()
+            self.display_header("ODE & Regression", "Solve Differential Equations and Fit Data")
+            
+            options = [
+                "Euler's Method (ODE)",
+                "Runge-Kutta Method (RK4)",
+                "Least Squares Regression",
+                "Back to Main Menu"
+            ]
+            self.display_menu_options(options)
+            
+            choice = IntPrompt.ask(
+                "Enter your choice",
+                choices=[str(i) for i in range(1, len(options) + 1)],
+                show_choices=False
+            )
+
+            if choice == 1:
+                self.run_euler()
+            elif choice == 2:
+                self.run_rk4()
+            elif choice == 3:
+                self.run_least_squares()
+            elif choice == 4:
+                break
+
+    def run_euler(self):
+        """Run Euler's method solver."""
+        self.clear_screen()
+        self.display_header("Euler's Method", "First-order ODE Solver")
+        
+        self.console.print(Panel(
+            "Euler's method is the most basic numerical procedure for solving ordinary differential equations (ODEs). "
+            "It uses the slope at the current point to predict the next value.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = EulerSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            steps_data = solver.get_steps()
+            self.formatter.display_euler_steps(steps_data)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.display_result_and_export(result, steps_data, "Euler")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_rk4(self):
+        """Run RK4 method solver."""
+        self.clear_screen()
+        self.display_header("Runge-Kutta (RK4)", "High-accuracy ODE Solver")
+        
+        self.console.print(Panel(
+            "The fourth-order Runge-Kutta method (RK4) is a highly accurate numerical technique for solving ODEs. "
+            "It uses four slope estimates per step to achieve much better precision than Euler's method.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = RungeKuttaSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            steps_data = solver.get_steps()
+            self.formatter.display_rk4_steps(steps_data)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.display_result_and_export(result, steps_data, "RK4")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_least_squares(self):
+        """Run Least Squares regression solver."""
+        self.clear_screen()
+        self.display_header("Least Squares", "Linear Regression (y = mx + c)")
+        
+        self.console.print(Panel(
+            "Least Squares regression finds the best-fitting line through a set of data points by "
+            "minimizing the sum of the squares of the vertical deviations from each data point to the line.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            x_points = [1.0, 2.0, 3.0, 4.0, 5.0]
+            y_points = [2.1, 3.9, 6.2, 8.1, 10.1]
+            self.console.print(f"[bold cyan]Example: Linear trend with noise[/bold cyan]")
+            self.console.print(f"X: {x_points}")
+            self.console.print(f"Y: {y_points}")
+        else:
+            x_str = Prompt.ask("Enter x points (space separated)")
+            y_str = Prompt.ask("Enter y points (space separated)")
+            try:
+                x_points = [float(x) for x in x_str.split()]
+                y_points = [float(y) for y in y_str.split()]
+            except ValueError:
+                self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+                return
+
+        solver = LeastSquaresSolver()
+        try:
+            result = solver.solve(x_points=x_points, y_points=y_points)
+            steps_data = solver.get_steps()
+            self.formatter.display_least_squares_steps(steps_data)
+            self.console.print(Panel(
+                f"[bold green]Equation: {result.metadata['equation']}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.display_result_and_export(result, steps_data, "Least-Squares")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
 
     def root_finding_menu(self):
         """Root finding submenu."""

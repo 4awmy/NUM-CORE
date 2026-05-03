@@ -13,6 +13,8 @@ from .calculus_engine import (
     GaussianQuadratureSolver,
     NumericalDifferentiationSolver
 )
+from .ode_solvers import EulerSolver, RungeKuttaSolver
+from .regression_solvers import LeastSquaresSolver
 
 __all__ = [
     "GaussSeidelSolver",
@@ -32,4 +34,7 @@ __all__ = [
     "SimpsonsRuleSolver",
     "GaussianQuadratureSolver",
     "NumericalDifferentiationSolver",
+    "EulerSolver",
+    "RungeKuttaSolver",
+    "LeastSquaresSolver",
 ]
