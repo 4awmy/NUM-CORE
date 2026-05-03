@@ -121,12 +121,30 @@ def test_simple_iteration_convergence_check():
     assert result.metadata["convergence_passed"] is False
 
 
+def test_newton_raphson_convergence_check():
+    solver = NewtonRaphsonSolver()
+    # f(x) = x^2 - 4, f''(x) = 2
+    # At x0=3: f(3)=5, f''(3)=2, product=10 > 0 -> True
+    result = solver.solve(expression="x**2 - 4", initial_guess=3.0)
+    assert "convergence_check_passed" in result.metadata
+    assert result.metadata["convergence_check_passed"] is True
+
+    # At x0=-3: f(-3)=5, f''(-3)=2, product=10 > 0 -> True
+    result_neg = solver.solve(expression="x**2 - 4", initial_guess=-3.0)
+    assert result_neg.metadata["convergence_check_passed"] is True
+
+    # At x0=0: f(0)=-4, f''(0)=2, product=-8 < 0 -> False
+    result_zero = solver.solve(expression="x**2 - 4", initial_guess=0.0)
+    assert result_zero.metadata["convergence_check_passed"] is False
+
+
 def test_newton_raphson_fallback():
     from unittest.mock import patch
     from numcore_engine.parser import SymbolicParser
     
     with patch.object(SymbolicParser, "get_derivative", side_effect=Exception("Symbolic fail")):
         solver = NewtonRaphsonSolver()
-        # Should still work using numerical differentiation
+        # Should still work using numerical differentiation; convergence_check_passed = None
         result = solver.solve(expression="x**2 - 4", initial_guess=3.0, tolerance=1e-6)
         assert pytest.approx(result.metadata["root"], rel=1e-5) == 2.0
+        assert result.metadata["convergence_check_passed"] is None

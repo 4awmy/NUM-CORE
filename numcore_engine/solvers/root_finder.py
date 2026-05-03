@@ -5,7 +5,7 @@ from ..parser import SymbolicParser
 from .calculus_engine import NumericalDifferentiationSolver
 
 
-class BisectionSolver:
+class BisectionSolver(Solver):
     """
     Bisection method for finding roots of a function f(x) = 0.
     Requires an interval [a, b] such that f(a) * f(b) < 0.
@@ -92,7 +92,7 @@ class BisectionSolver:
         return "expression" in kwargs and "a" in kwargs and "b" in kwargs
 
 
-class NewtonRaphsonSolver:
+class NewtonRaphsonSolver(Solver):
     """
     Newton-Raphson method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) / f'(x_n)
@@ -134,6 +134,17 @@ class NewtonRaphsonSolver:
             def df(x: float) -> float:
                 res = diff_solver.solve(f=f, x=x, h=1e-7, method="central")
                 return float(res.y_data[0])
+
+        # f(x₀)·f″(x₀) > 0 convergence check (sufficient condition)
+        convergence_check_passed: Optional[bool] = None
+        try:
+            second_derivative_expr = SymbolicParser.get_derivative(expression, order=2)
+            d2f = SymbolicParser.parse_expression(second_derivative_expr)
+            fx0 = f(x_n)
+            d2fx0 = d2f(x_n)
+            convergence_check_passed = bool(fx0 * d2fx0 > 0)
+        except Exception:
+            convergence_check_passed = None
 
         self._steps = []
         x_history: List[float] = []
@@ -179,7 +190,12 @@ class NewtonRaphsonSolver:
             title="Newton-Raphson Convergence",
             x_data=x_history,
             y_data=y_history,
-            metadata={"root": x_n, "iterations": len(self._steps), "diverged": diverged},
+            metadata={
+                "root": x_n,
+                "iterations": len(self._steps),
+                "diverged": diverged,
+                "convergence_check_passed": convergence_check_passed,
+            },
         )
 
     def get_steps(self) -> List[NumericalStep]:
@@ -191,7 +207,7 @@ class NewtonRaphsonSolver:
         return "expression" in kwargs and "initial_guess" in kwargs
 
 
-class SecantSolver:
+class SecantSolver(Solver):
     """
     Secant method for finding roots of a function f(x) = 0.
     Formula: x_{n+1} = x_n - f(x_n) * (x_n - x_{n-1}) / (f(x_n) - f(x_{n-1}))
@@ -280,7 +296,7 @@ class SecantSolver:
         return "expression" in kwargs and "x0" in kwargs and "x1" in kwargs
 
 
-class SimpleIterationSolver:
+class SimpleIterationSolver(Solver):
     """
     Simple Iteration (Fixed Point) method for finding roots of x = g(x).
     Formula: x_{n+1} = g(x_n)

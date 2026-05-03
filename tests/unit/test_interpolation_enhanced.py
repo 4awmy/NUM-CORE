@@ -81,6 +81,18 @@ def test_cubic_spline_interpolation():
     # S0(0.5) = 1.5*0.5 - 0.5*0.125 = 0.75 - 0.0625 = 0.6875
     assert np.isclose(data.y_data[0], 0.6875)
 
+
+def test_cubic_spline_interpolation_list_target():
+    solver = CubicSplineSolver()
+    x = [0, 1, 2]
+    y = [0, 1, 0]
+    # S0(0.5) = 0.6875, S1(1.5) = symmetric = 0.6875
+    data = solver.solve(x_points=x, y_points=y, target_x=[0.5, 1.5])
+    assert len(data.y_data) == 2
+    assert np.isclose(data.y_data[0], 0.6875)
+    assert np.isclose(data.y_data[1], 0.6875)
+
+
 def test_cubic_spline_invalid():
     solver = CubicSplineSolver()
     # Need at least 3 points

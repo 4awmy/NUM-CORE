@@ -458,7 +458,7 @@ class CubicSplineSolver(Solver):
                 result_y = [evaluate(float(target_x))]
             else:
                 x_data = [float(tx) for tx in target_x]
-                result_y = [evaluate(tx) for x in x_data]
+                result_y = [evaluate(tx) for tx in x_data]
         else:
             x_data = x.tolist()
             result_y = y.tolist()
