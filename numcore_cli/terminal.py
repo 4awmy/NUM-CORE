@@ -12,6 +12,8 @@ from rich import box
 from numcore_engine.solvers import (
     NewtonRaphsonSolver,
     SimpleIterationSolver,
+    BisectionSolver,
+    SecantSolver,
     GaussSeidelSolver,
     JacobiSolver,
 )
@@ -111,6 +113,8 @@ class NumericalCLI:
             options = [
                 "Newton-Raphson Method",
                 "Simple Iteration Method",
+                "Bisection Method",
+                "Secant Method",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -126,7 +130,100 @@ class NumericalCLI:
             elif choice == 2:
                 self.run_simple_iteration()
             elif choice == 3:
+                self.run_bisection()
+            elif choice == 4:
+                self.run_secant()
+            elif choice == 5:
                 break
+
+    def run_bisection(self):
+        """Run Bisection solver."""
+        self.clear_screen()
+        self.display_header("Bisection Method", "Robust root finding by interval halving")
+        
+        self.console.print(Panel(
+            "Bisection: A reliable method that repeatedly halves an interval and selects the sub-interval "
+            "where the root exists. Requires f(a) and f(b) to have opposite signs.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x**3 - 7*x**2 + 14*x - 6"
+            a, b = 0.0, 1.0
+            tolerance = 1e-2
+            self.console.print(f"[bold cyan]Example: Finding root in [0, 1][/bold cyan]")
+            self.console.print(f"Function: {expression}")
+            self.console.print(f"Interval: [{a}, {b}]")
+        else:
+            expression = Prompt.ask("Enter the function f(x)")
+            a = FloatPrompt.ask("Enter lower bound a")
+            b = FloatPrompt.ask("Enter upper bound b")
+            tolerance = FloatPrompt.ask("Enter tolerance", default=1e-6)
+
+        solver = BisectionSolver()
+        try:
+            result = solver.solve(expression=expression, a=a, b=b, tolerance=tolerance)
+            steps = solver.get_steps()
+            # We can use a generic step displayer or add one to formatter
+            self.console.print(Panel(
+                f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
+                f"Iterations: {result.metadata['iterations']}",
+                title="Result",
+                border_style="green"
+            ))
+            self.display_result_and_export(result, steps, "Bisection")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_secant(self):
+        """Run Secant solver."""
+        self.clear_screen()
+        self.display_header("Secant Method", "Root finding using secant lines")
+        
+        self.console.print(Panel(
+            "Secant: An iterative method that uses two initial guesses to approximate the root. "
+            "Similar to Newton-Raphson but does not require derivatives.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x**3 - 2*x**2 - 5"
+            x0, x1 = 1.0, 4.0
+            tolerance = 1e-4
+            self.console.print(f"[bold cyan]Example: Finding root in [1, 4][/bold cyan]")
+            self.console.print(f"Function: {expression}")
+            self.console.print(f"Guesses: x0={x0}, x1={x1}")
+        else:
+            expression = Prompt.ask("Enter the function f(x)")
+            x0 = FloatPrompt.ask("Enter first guess x0")
+            x1 = FloatPrompt.ask("Enter second guess x1")
+            tolerance = FloatPrompt.ask("Enter tolerance", default=1e-6)
+
+        solver = SecantSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, x1=x1, tolerance=tolerance)
+            steps = solver.get_steps()
+            self.console.print(Panel(
+                f"[bold green]Root found: {result.metadata['root']:.8f}[/bold green]\n"
+                f"Iterations: {result.metadata['iterations']}",
+                title="Result",
+                border_style="green"
+            ))
+            self.display_result_and_export(result, steps, "Secant")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
 
     def run_newton_raphson(self):
         """Run Newton-Raphson solver."""

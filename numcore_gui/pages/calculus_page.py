@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import numpy as np
 from numcore_gui.visualization import PlotManager
+from numcore_gui.equation_input import EquationInputWidget
 from numcore_engine.models import SimulationData
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.parser import SymbolicParser
@@ -49,11 +50,9 @@ class CalculusPage(ctk.CTkFrame):
         self.method_menu.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Equation
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., sin(x)")
-        self.func_entry.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.func_entry.insert(0, "x**2")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=3, column=0, padx=15, pady=(10, 0), sticky="ew")
+        self.func_input.set_expression("x**2")
 
         # Range / Point
         self.range_label = ctk.CTkLabel(self.input_frame, text="Range [a, b]:")
@@ -69,8 +68,9 @@ class CalculusPage(ctk.CTkFrame):
         self.n_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.n_entry.insert(0, "10")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Execute Mission", command=self.solve_action)
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve", command=self.solve_action)
         self.solve_button.grid(row=9, column=0, padx=20, pady=20)
+
 
         # Results area
         self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
@@ -133,12 +133,11 @@ class CalculusPage(ctk.CTkFrame):
     def solve_action(self):
         """Triggers the numerical calculus solver and updates the plot."""
         self.error_label.configure(text="")
-        method = self.method_menu.get()
-        expression = self.func_entry.get()
-        
-        if not expression:
-            self.error_label.configure(text="Error: Expression is required.")
+        if not self.func_input.is_valid():
             return
+
+        method = self.method_menu.get()
+        expression = self.func_input.get_expression()
 
         try:
             f = SymbolicParser.parse_expression(expression)

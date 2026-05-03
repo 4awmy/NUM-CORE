@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 import matplotlib.animation as animation
 import customtkinter as ctk
 import numpy as np
+import os
 from typing import List, Any, Callable
 from numcore_engine.models import SimulationData, NumericalStep
 from numcore_engine.parser import SymbolicParser
@@ -54,6 +55,11 @@ class PlotManager:
                 child.config(background='#2b2b2b', foreground='white')
             except:
                 pass
+
+    def clear_plot(self):
+        """Clears the current axes."""
+        self.ax.clear()
+        self.canvas.draw()
 
     def plot_static(self, data: SimulationData):
         """Renders a static plot from SimulationData."""
@@ -134,7 +140,8 @@ class PlotManager:
         self.ax.clear()
         f = SymbolicParser.parse_expression(f_str)
         
-        guesses = [step.value for step in steps]
+        # Filter out NaN values
+        guesses = [step.value for step in steps if not np.isnan(step.value)]
         if not guesses: return
         
         x_min, x_max = min(guesses), max(guesses)
@@ -153,6 +160,46 @@ class PlotManager:
         self.ax.scatter(guesses[-1], path_y[-1], color='green', s=100, zorder=5, label="Final Root")
         
         self.ax.set_title("Solution Path on f(x)")
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("f(x)")
+        self.ax.legend()
+        self.ax.grid(True, linestyle='--', alpha=0.3)
+        self.canvas.draw()
+
+    def plot_bisection_brackets(self, steps: List[NumericalStep], f_str: str):
+        """Visualizes the shrinking brackets in the Bisection method."""
+        self.ax.clear()
+        f = SymbolicParser.parse_expression(f_str)
+        
+        if not steps: return
+        
+        # Get initial interval
+        a0 = steps[0].details.get("a")
+        b0 = steps[0].details.get("b")
+        
+        if a0 is None or b0 is None: return
+        
+        margin = (b0 - a0) * 0.2
+        x_vals = np.linspace(a0 - margin, b0 + margin, 400)
+        y_vals = [f(x) for x in x_vals]
+        
+        self.ax.plot(x_vals, y_vals, color='white', alpha=0.5, label=f"f(x) = {f_str}")
+        self.ax.axhline(0, color='red', linestyle='--', alpha=0.5)
+        
+        # Plot brackets as vertical lines with decreasing alpha
+        n = len(steps)
+        for i, step in enumerate(steps):
+            a = step.details.get("a")
+            b = step.details.get("b")
+            alpha = max(0.1, 1.0 - (i / n))
+            self.ax.axvline(a, color='cyan', alpha=alpha, linestyle=':')
+            self.ax.axvline(b, color='magenta', alpha=alpha, linestyle=':')
+            
+        # Highlight final root
+        root = steps[-1].value
+        self.ax.scatter(root, f(root), color='green', s=100, zorder=5, label="Final Root")
+        
+        self.ax.set_title("Bisection Brackets")
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("f(x)")
         self.ax.legend()
@@ -285,4 +332,7 @@ class PlotManager:
 
     def export_plot(self, filename: str):
         """Exports the current figure to a file."""
+        directory = os.path.dirname(filename)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
         self.figure.savefig(filename)

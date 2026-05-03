@@ -53,6 +53,7 @@ class EquationInputWidget(ctk.CTkFrame):
         """Validates the current expression."""
         expr = self.get_expression()
         if not expr:
+            self.show_error("Expression cannot be empty")
             return False
         try:
             SymbolicParser.parse_expression(expr)

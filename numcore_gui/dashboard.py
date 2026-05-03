@@ -9,14 +9,16 @@ from numcore_gui.pages.chapter_2_app import Chapter2AppPage
 from numcore_gui.pages.chapter_3_app import Chapter3AppPage
 from numcore_gui.pages.chapter_4_app import Chapter4AppPage
 from numcore_gui.help_system import HelpProvider
+from numcore_gui.theme import apply_theme
 
 class Dashboard(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        apply_theme()
         self.title("NUM-CORE | Numerical Methods")
         self.geometry("1280x800")
-        ctk.set_appearance_mode("dark")
+
 
         # Configure grid layout (2x2)
         self.grid_columnconfigure(1, weight=1)
@@ -51,17 +53,18 @@ class Dashboard(ctk.CTk):
         self.apps_label = ctk.CTkLabel(self.sidebar_frame, text="Scientific Applications", font=ctk.CTkFont(size=12, weight="bold"))
         self.apps_label.grid(row=6, column=0, padx=20, pady=(20, 5), sticky="w")
 
-        self.ch1_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 1: Beam Stress", command=self.show_ch1_app)
+        self.ch1_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 1: Root Finding App", command=self.show_ch1_app)
         self.ch1_app_btn.grid(row=7, column=0, padx=20, pady=5)
 
-        self.ch2_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 2: Circuit Analysis", command=self.show_ch2_app)
+        self.ch2_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 2: Linear Systems App", command=self.show_ch2_app)
         self.ch2_app_btn.grid(row=8, column=0, padx=20, pady=5)
 
-        self.ch3_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 3: Data Fitting", command=self.show_ch3_app)
+        self.ch3_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 3: Interpolation App", command=self.show_ch3_app)
         self.ch3_app_btn.grid(row=9, column=0, padx=20, pady=5)
 
-        self.ch4_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 4: Work Done", command=self.show_ch4_app)
+        self.ch4_app_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 4: Numerical Calculus App", command=self.show_ch4_app)
         self.ch4_app_btn.grid(row=10, column=0, padx=20, pady=5)
+
 
         # Help button in sidebar
         self.help_info_label = ctk.CTkLabel(self.sidebar_frame, text="System Help:", anchor="w")
@@ -120,19 +123,20 @@ class Dashboard(ctk.CTk):
 
     def show_ch1_app(self):
         self.select_page("ch1_app")
-        self.status_label.configure(text="Active: Ch 1 App - Beam Stress")
+        self.status_label.configure(text="Active: Ch 1 App - Root Finding")
 
     def show_ch2_app(self):
         self.select_page("ch2_app")
-        self.status_label.configure(text="Active: Ch 2 App - Circuit Analysis")
+        self.status_label.configure(text="Active: Ch 2 App - Linear Systems")
 
     def show_ch3_app(self):
         self.select_page("ch3_app")
-        self.status_label.configure(text="Active: Ch 3 App - Data Fitting")
+        self.status_label.configure(text="Active: Ch 3 App - Interpolation")
 
     def show_ch4_app(self):
         self.select_page("ch4_app")
-        self.status_label.configure(text="Active: Ch 4 App - Work Done")
+        self.status_label.configure(text="Active: Ch 4 App - Numerical Calculus")
+
 
     def select_page(self, page_name):
         # Hide all pages

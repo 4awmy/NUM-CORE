@@ -136,7 +136,7 @@ class NewtonDifferenceTableSolver(Solver):
             metadata={
                 "difference_table": table.tolist(),
                 "coefficients": coefficients,
-                "h": float(x_points[1] - x_points[0])
+                "h_value": float(x_points[1] - x_points[0])
             }
         )
 

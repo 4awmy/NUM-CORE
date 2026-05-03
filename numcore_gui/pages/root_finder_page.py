@@ -1,6 +1,8 @@
 import customtkinter as ctk
 import math
 from numcore_gui.visualization import PlotManager
+from numcore_gui.equation_input import EquationInputWidget
+from numcore_gui.smart_solver_panel import SmartSolverPanel
 
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.root_finder import (
@@ -115,8 +117,9 @@ class RootFinderPage(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.input_frame = ctk.CTkScrollableFrame(self, corner_radius=10)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
+        self.input_frame.grid_columnconfigure(0, weight=1)
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 1: Root Finding", font=ctk.CTkFont(size=18, weight="bold"))
         self.title_label.grid(row=0, column=0, padx=20, pady=20)
@@ -154,10 +157,8 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_type_menu.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Input Fields
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Equation f(x):")
-        self.func_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., x**2 - 5")
-        self.func_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
+        self.func_input = EquationInputWidget(self.input_frame)
+        self.func_input.grid(row=7, column=0, padx=15, pady=(10, 0), sticky="ew")
 
         # Dynamic Input 1 (Guess / a / x0)
         self.input1_label = ctk.CTkLabel(self.input_frame, text="Initial Guess:")
@@ -176,8 +177,22 @@ class RootFinderPage(ctk.CTkFrame):
         self.tol_entry.grid(row=14, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.tol_entry.insert(0, "1e-6")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Equation", command=self.solve_action)
-        self.solve_button.grid(row=15, column=0, padx=20, pady=20)
+        # Buttons Frame
+        self.button_frame = ctk.CTkFrame(self.input_frame, fg_color="transparent")
+        self.button_frame.grid(row=15, column=0, padx=20, pady=20, sticky="ew")
+        self.button_frame.grid_columnconfigure((0, 1), weight=1)
+
+        self.solve_button = ctk.CTkButton(self.button_frame, text="Solve Equation", command=self.solve_action)
+        self.solve_button.grid(row=0, column=0, padx=(0, 5), pady=0, sticky="ew")
+
+        self.smart_solve_button = ctk.CTkButton(
+            self.button_frame, 
+            text="Smart Solve", 
+            fg_color="#673AB7", 
+            hover_color="#5E35B1",
+            command=self.smart_solve_action
+        )
+        self.smart_solve_button.grid(row=0, column=1, padx=(5, 0), pady=0, sticky="ew")
 
         # Results area (Redesigned as a panel)
         self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
@@ -190,9 +205,14 @@ class RootFinderPage(ctk.CTkFrame):
         self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
         self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
+        # Smart Solver Panel (Inline)
+        self.smart_panel = SmartSolverPanel(self.input_frame)
+        self.smart_panel.grid(row=17, column=0, padx=20, pady=10, sticky="nsew")
+        self.smart_panel.grid_forget() # Hidden by default
+
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=17, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=18, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
@@ -243,8 +263,7 @@ class RootFinderPage(ctk.CTkFrame):
         selected_example = next((ex for ex in examples_for_method if ex["name"] == example_name), None)
 
         if selected_example:
-            self.func_entry.delete(0, ctk.END)
-            self.func_entry.insert(0, selected_example.get("expression", ""))
+            self.func_input.set_expression(selected_example.get("expression", ""))
             
             self.tol_entry.delete(0, ctk.END)
             self.tol_entry.insert(0, selected_example.get("tol", "1e-6"))
@@ -280,15 +299,15 @@ class RootFinderPage(ctk.CTkFrame):
             self.input1_label.configure(text="Initial Guess (x0):")
             self.input2_label.grid_forget()
             self.input2_entry.grid_forget()
-            self.func_label.configure(text="Equation f(x):")
+            self.func_input.label.configure(text="Equation f(x):")
         elif method == "Simple Iteration":
             self.input1_label.configure(text="Initial Guess (x0):")
             self.input2_label.grid_forget()
             self.input2_entry.grid_forget()
-            self.func_label.configure(text="Iteration Function g(x):")
+            self.func_input.label.configure(text="Iteration Function g(x):")
         
         if method != "Simple Iteration":
-            self.func_label.configure(text="Equation f(x):")
+            self.func_input.label.configure(text="Equation f(x):")
 
         # Update examples menu
         examples = self.EXAMPLE_PROBLEMS.get(method, [])
@@ -328,12 +347,13 @@ class RootFinderPage(ctk.CTkFrame):
     def solve_action(self):
         """Triggers the root finder solver and updates visualization."""
         self.error_label.configure(text="")
-        method = self.method_menu.get()
-        expression = self.func_entry.get()
+        self.smart_panel.grid_forget()
         
-        if not expression:
-            self.error_label.configure(text="Error: Expression is required.")
+        if not self.func_input.is_valid():
             return
+
+        method = self.method_menu.get()
+        expression = self.func_input.get_expression()
 
         try:
             tol = float(self.tol_entry.get() or 1e-6)
@@ -380,3 +400,76 @@ class RootFinderPage(ctk.CTkFrame):
 
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Compares all available root finding methods."""
+        self.error_label.configure(text="")
+        if not self.func_input.is_valid():
+            return
+
+        expression = self.func_input.get_expression()
+        tol = float(self.tol_entry.get() or 1e-6)
+        
+        results = []
+        
+        # We need common parameters for comparison. 
+        # Newton and Simple Iteration use x0.
+        # Bisection and Secant use [a, b] or [x0, x1].
+        # For a fair comparison, we'll try to use the provided inputs.
+        
+        try:
+            x0 = float(self.input1_entry.get())
+            # Try to get x1/b if available, otherwise use x0 + 1.0 as a guess for interval
+            try:
+                x1 = float(self.input2_entry.get())
+            except:
+                x1 = x0 + 1.0
+
+            comparison_configs = [
+                ("Newton-Raphson", {"initial_guess": x0}),
+                ("Simple Iteration", {"initial_guess": x0}),
+                ("Bisection", {"a": x0, "b": x1}),
+                ("Secant", {"x0": x0, "x1": x1})
+            ]
+
+            for method_name, extra_kwargs in comparison_configs:
+                solver = self.solvers[method_name]
+                kwargs = {
+                    "expression": expression,
+                    "tolerance": tol,
+                    "max_iterations": 100
+                }
+                kwargs.update(extra_kwargs)
+                
+                try:
+                    data = solver.solve(**kwargs)
+                    results.append({
+                        "method": method_name,
+                        "diverged": data.metadata.get("diverged", False),
+                        "iterations": data.metadata.get("iterations"),
+                        "error": solver.get_steps()[-1].error if solver.get_steps() else 1.0,
+                        "root": data.metadata.get("root"),
+                        "reason": "Converged successfully." if not data.metadata.get("diverged") else "Method diverged."
+                    })
+                except Exception as e:
+                    results.append({
+                        "method": method_name,
+                        "diverged": True,
+                        "iterations": 0,
+                        "error": 1.0,
+                        "root": None,
+                        "reason": str(e)
+                    })
+
+            self.smart_panel.grid(row=17, column=0, padx=20, pady=10, sticky="nsew")
+            self.smart_panel.populate(results)
+            
+            # If any converged, plot the best one
+            converged = [r for r in results if not r['diverged']]
+            if converged:
+                best = min(converged, key=lambda x: x['iterations'])
+                self.method_menu.set(best['method'])
+                self.solve_action()
+            
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

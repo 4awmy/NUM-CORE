@@ -8,7 +8,10 @@
       "Bash(python:*)",
       "Bash(powershell.exe:*)",
       "Bash(gh label:*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "Bash(do:*)",
+      "Bash(echo === PR #111 artifact files ===:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }
