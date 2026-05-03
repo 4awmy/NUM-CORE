@@ -6,7 +6,6 @@ from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.parser import SymbolicParser
-from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.calculus_engine import (
     TrapezoidalSolver,
     SimpsonsRuleSolver,
