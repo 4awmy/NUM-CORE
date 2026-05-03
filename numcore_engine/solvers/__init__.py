@@ -1,5 +1,16 @@
 from .network_solver import GaussSeidelSolver, JacobiSolver
 from .root_finder import BisectionSolver, NewtonRaphsonSolver, SecantSolver, SimpleIterationSolver
+from .calculus_engine import (
+    LagrangeInterpolationSolver,
+    NewtonDifferenceTableSolver,
+    NewtonDividedDifferenceSolver,
+    IntegrationSolver,
+    MidpointSolver,
+    TrapezoidalSolver,
+    SimpsonsRuleSolver,
+    GaussianQuadratureSolver,
+    NumericalDifferentiationSolver
+)
 
 __all__ = [
     "GaussSeidelSolver",
@@ -8,4 +19,13 @@ __all__ = [
     "NewtonRaphsonSolver",
     "SecantSolver",
     "SimpleIterationSolver",
+    "LagrangeInterpolationSolver",
+    "NewtonDifferenceTableSolver",
+    "NewtonDividedDifferenceSolver",
+    "IntegrationSolver",
+    "MidpointSolver",
+    "TrapezoidalSolver",
+    "SimpsonsRuleSolver",
+    "GaussianQuadratureSolver",
+    "NumericalDifferentiationSolver",
 ]

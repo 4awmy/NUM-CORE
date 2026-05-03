@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from numcore_gui.visualization import PlotManager
 from numcore_engine.solvers.root_finder import NewtonRaphsonSolver
+from numcore_gui.equation_input import EquationInputWidget
 
 class Chapter1AppPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -39,11 +40,13 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.example_label = ctk.CTkLabel(self.input_frame, text="Example Parameters:", font=ctk.CTkFont(weight="bold"))
         self.example_label.grid(row=2, column=0, padx=20, pady=(10, 0), sticky="w")
 
-        self.func_label = ctk.CTkLabel(self.input_frame, text="Stress Function S(t):")
-        self.func_label.grid(row=3, column=0, padx=20, pady=(5, 0), sticky="w")
-        self.func_entry = ctk.CTkEntry(self.input_frame)
-        self.func_entry.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.func_entry.insert(0, "x**3 - 20*x**2 + 100*x - 50")
+        self.func_input = EquationInputWidget(
+            self.input_frame, 
+            label_text="Stress Function S(t):",
+            placeholder="e.g., x**3 - 20*x**2 + 100*x - 50"
+        )
+        self.func_input.grid(row=3, column=0, padx=20, pady=(5, 10), sticky="ew")
+        self.func_input.set_expression("x**3 - 20*x**2 + 100*x - 50")
 
         self.guess_label = ctk.CTkLabel(self.input_frame, text="Initial Guess (t0):")
         self.guess_label.grid(row=5, column=0, padx=20, pady=(5, 0), sticky="w")
@@ -79,7 +82,7 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.solver = NewtonRaphsonSolver()
 
     def solve_action(self):
-        expression = self.func_entry.get()
+        expression = self.func_input.get_expression()
         guess = float(self.guess_entry.get())
         
         try:

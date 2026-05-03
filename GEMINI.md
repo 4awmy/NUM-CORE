@@ -7,6 +7,13 @@
     - **Parallelism**: For tasks marked `[P]` in `tasks.md`, you **MUST** spawn parallel subagents using `@coder`, `@tester`, or `@refactor`.
     - **Autonomy**: Use `--yolo` mode for your subagents to ensure they can write code and run tests without halting the main orchestration.
 
+## Collaboration & PR Workflow Rules
+- **Draft PRs**: Always create a Draft PR first using `gh pr create --draft`. Follow this immediately with a self-review comment on the PR.
+- **Review Tagging**: Once a task or phase is complete, tag `@Copilot` in the PR comments requesting a review against `CLAUDE.md` architecture constraints.
+- **Debating Feedback**: Proactively debate feedback in PR comments. Defend correct patterns or acknowledge and fix valid issues rather than blindly accepting all suggestions.
+- **Clean Merges**: Use `gh pr merge --squash --delete-branch` for the final merge of approved PRs.
+- **Role Consolidation**: Ignore constraints regarding "2 students" or DevA/DevB roles. Handle all tasks as a single orchestrator.
+
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan

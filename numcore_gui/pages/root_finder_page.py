@@ -262,3 +262,121 @@ class RootFinderPage(ctk.CTkFrame):
                 self.input1_entry.insert(0, selected_example.get("x0", ""))
         else:
             self.error_label.configure(text=f"Error: Example '{example_name}' not found for method '{method}'.")
+
+    def update_inputs(self, method):
+        """Updates the input fields based on the selected method."""
+        # Reset labels and grid visibility
+        if method == "Bisection":
+            self.input1_label.configure(text="Lower Bound (a):")
+            self.input2_label.configure(text="Upper Bound (b):")
+            self.input2_label.grid(row=11, column=0, padx=20, pady=(10, 0), sticky="w")
+            self.input2_entry.grid(row=12, column=0, padx=20, pady=(0, 10), sticky="ew")
+        elif method == "Secant":
+            self.input1_label.configure(text="First Guess (x0):")
+            self.input2_label.configure(text="Second Guess (x1):")
+            self.input2_label.grid(row=11, column=0, padx=20, pady=(10, 0), sticky="w")
+            self.input2_entry.grid(row=12, column=0, padx=20, pady=(0, 10), sticky="ew")
+        elif method == "Newton-Raphson":
+            self.input1_label.configure(text="Initial Guess (x0):")
+            self.input2_label.grid_forget()
+            self.input2_entry.grid_forget()
+            self.func_label.configure(text="Equation f(x):")
+        elif method == "Simple Iteration":
+            self.input1_label.configure(text="Initial Guess (x0):")
+            self.input2_label.grid_forget()
+            self.input2_entry.grid_forget()
+            self.func_label.configure(text="Iteration Function g(x):")
+        
+        if method != "Simple Iteration":
+            self.func_label.configure(text="Equation f(x):")
+
+        # Update examples menu
+        examples = self.EXAMPLE_PROBLEMS.get(method, [])
+        if examples:
+            self.example_menu.configure(values=[ex["name"] for ex in examples])
+            self.example_menu.set(examples[0]["name"])
+        else:
+            self.example_menu.configure(values=["No Examples Available"])
+            self.example_menu.set("No Examples Available")
+
+    def _create_iteration_table_headers(self):
+        """Creates headers for the iteration table."""
+        headers = ["Iter", "Value (x)", "Error", "Details"]
+        for i, header in enumerate(headers):
+            lbl = ctk.CTkLabel(self.iteration_table_frame, text=header, font=ctk.CTkFont(weight="bold"))
+            lbl.grid(row=0, column=i, padx=10, pady=5, sticky="nsew")
+
+    def _display_iteration_table(self, steps):
+        """Populates the iteration table with step data."""
+        # Clear existing rows (except headers)
+        for widget in self.iteration_table_frame.winfo_children():
+            try:
+                if int(widget.grid_info()["row"]) > 0:
+                    widget.destroy()
+            except (KeyError, ValueError):
+                pass
+
+        for i, step in enumerate(steps):
+            ctk.CTkLabel(self.iteration_table_frame, text=str(step.step_idx)).grid(row=i+1, column=0, padx=10, pady=2)
+            ctk.CTkLabel(self.iteration_table_frame, text=f"{step.value:.6f}").grid(row=i+1, column=1, padx=10, pady=2)
+            ctk.CTkLabel(self.iteration_table_frame, text=f"{step.error:.2e}").grid(row=i+1, column=2, padx=10, pady=2)
+            
+            # Format details string
+            details_str = ", ".join([f"{k}={v:.4f}" if isinstance(v, (float, int)) else f"{k}={v}" for k, v in step.details.items()])
+            ctk.CTkLabel(self.iteration_table_frame, text=details_str, font=ctk.CTkFont(size=10)).grid(row=i+1, column=3, padx=10, pady=2)
+
+    def solve_action(self):
+        """Triggers the root finder solver and updates visualization."""
+        self.error_label.configure(text="")
+        method = self.method_menu.get()
+        expression = self.func_entry.get()
+        
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            tol = float(self.tol_entry.get() or 1e-6)
+            solver = self.solvers[method]
+            
+            kwargs = {
+                "expression": expression,
+                "tolerance": tol,
+                "max_iterations": 100
+            }
+
+            if method == "Bisection":
+                kwargs["a"] = float(self.input1_entry.get())
+                kwargs["b"] = float(self.input2_entry.get())
+            elif method == "Secant":
+                kwargs["x0"] = float(self.input1_entry.get())
+                kwargs["x1"] = float(self.input2_entry.get())
+            elif method == "Newton-Raphson" or method == "Simple Iteration":
+                kwargs["initial_guess"] = float(self.input1_entry.get())
+
+            data = solver.solve(**kwargs)
+            steps = solver.get_steps()
+
+            # Update Table
+            self._display_iteration_table(steps)
+
+            # Update Results Panel
+            root = data.metadata.get("root")
+            iters = data.metadata.get("iterations")
+            diverged = data.metadata.get("diverged", False)
+            
+            status = "CONVERGED" if not diverged else "DIVERGED"
+            
+            self.result_label.configure(
+                text=f"Status: {status}\nRoot: {root:.6f}\nIterations: {iters}"
+            )
+
+            # Visualization
+            viz_type = self.viz_type_menu.get()
+            if viz_type == "Solution Path":
+                self.plot_manager.plot_solution_path(steps, expression if method != "Simple Iteration" else None)
+            else:
+                self.plot_manager.plot_iteration_history(steps)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Error: {str(e)}")

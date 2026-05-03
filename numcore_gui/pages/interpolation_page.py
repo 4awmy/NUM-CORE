@@ -20,10 +20,19 @@ class InterpolationPage(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
+        # Solvers mapping
+        self.solvers = {
+            "Lagrange Interpolation": LagrangeInterpolationSolver(),
+            "Newton Divided Difference": NewtonDividedDifferenceSolver(),
+            "Newton Forward Difference": NewtonDifferenceTableSolver()
+        }
+
+        self.example_problems = self._load_example_problems_from_md()
+
         # Left Panel: Inputs
         self.input_frame = ctk.CTkFrame(self, corner_radius=10)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
-        
+
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 4: Interpolation", font=ctk.CTkFont(size=18, weight="bold"))
         self.title_label.grid(row=0, column=0, padx=20, pady=20)
 
@@ -55,71 +64,6 @@ class InterpolationPage(ctk.CTkFrame):
         )
         self.load_examples_menu.set("Load Example")
         self.load_examples_menu.grid(row=4, column=0, padx=20, pady=(0, 10), sticky="ew")
-        
-        # X Points
-        self.x_label = ctk.CTkLabel(self.input_frame, text="X Points:")
-        self.x_label.grid(row=5, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.x_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., [0, 1, 2]")
-        self.x_entry.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.x_entry.insert(0, "[0, 1, 2]")
-
-        # Y Points
-        self.y_label = ctk.CTkLabel(self.input_frame, text="Y Points:")
-        self.y_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.y_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., [1, 3, 2]")
-        self.y_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.y_entry.insert(0, "[1, 3, 2]")
-
-        # Target X (Optional)
-        self.target_label = ctk.CTkLabel(self.input_frame, text="Target X (to interpolate):")
-        self.target_label.grid(row=9, column=0, padx=20, pady=(10, 0), sticky="w")
-        self.target_entry = ctk.CTkEntry(self.input_frame, placeholder_text="e.g., 0.5")
-        self.target_entry.grid(row=10, column=0, padx=20, pady=(0, 10), sticky="ew")
-        self.target_entry.insert(0, "0.5")
-
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Interpolate", command=self.solve_action)
-        self.solve_button.grid(row=11, column=0, padx=20, pady=20)
-
-        # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=("gray85", "gray15"))
-        self.results_panel.grid(row=12, column=0, padx=20, pady=10, sticky="nsew")
-        self.results_panel.grid_columnconfigure(0, weight=1)
-        
-        self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
-        self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
-        
-        self.result_label = ctk.CTkLabel(self.results_panel, text="No data computed yet.", font=ctk.CTkFont(size=11))
-        self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
-        # Inline Error Display
-        self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=13, column=0, padx=20, pady=5, sticky="w")
-
-        # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10)
-        self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
-        
-        self.viz_label = ctk.CTkLabel(self.viz_frame, text="Interpolation Polynomial", font=ctk.CTkFont(size=16, weight="bold"))
-        self.viz_label.pack(pady=20)
-
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color="gray20", corner_radius=5)
-        self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
-        
-        self.plot_manager = PlotManager(self.plot_placeholder)
-
-        # Difference Table Display
-        self.difference_table_frame = ctk.CTkScrollableFrame(self.viz_frame, label_text="Difference Table", corner_radius=10)
-        # Initially hide the difference table frame
-        self.difference_table_frame.pack_forget()
-
-        # Solvers mapping
-        self.solvers = {
-            "Lagrange Interpolation": LagrangeInterpolationSolver(),
-            "Newton Divided Difference": NewtonDividedDifferenceSolver(),
-            "Newton Forward Difference": NewtonDifferenceTableSolver()
-        }
-
-        self.example_problems = self._load_example_problems_from_md()
 
     def _load_example_problems_from_md(self) -> list:
         try:
