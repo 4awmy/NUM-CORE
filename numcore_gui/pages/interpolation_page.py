@@ -9,7 +9,9 @@ from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.calculus_engine import (
     LagrangeInterpolationSolver,
     NewtonDividedDifferenceSolver,
-    NewtonDifferenceTableSolver
+    NewtonDifferenceTableSolver,
+    LinearInterpolationSolver,
+    CubicSplineSolver
 )
 
 class InterpolationPage(ctk.CTkFrame):
@@ -24,7 +26,9 @@ class InterpolationPage(ctk.CTkFrame):
         self.solvers = {
             "Lagrange Interpolation": LagrangeInterpolationSolver(),
             "Newton Divided Difference": NewtonDividedDifferenceSolver(),
-            "Newton Forward Difference": NewtonDifferenceTableSolver()
+            "Newton Forward Difference": NewtonDifferenceTableSolver(),
+            "Linear Interpolation": LinearInterpolationSolver(),
+            "Cubic Spline Interpolation": CubicSplineSolver()
         }
 
         self.example_problems = self._load_example_problems_from_md()
@@ -48,7 +52,9 @@ class InterpolationPage(ctk.CTkFrame):
             values=[
                 "Lagrange Interpolation", 
                 "Newton Divided Difference", 
-                "Newton Forward Difference"
+                "Newton Forward Difference",
+                "Linear Interpolation",
+                "Cubic Spline Interpolation"
             ]
         )
         self.method_menu.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
@@ -205,7 +211,7 @@ class InterpolationPage(ctk.CTkFrame):
             
             # Plotting logic for interpolation curves
             points = list(zip(x_points, y_points))
-            if method in ["Lagrange Interpolation", "Newton Divided Difference"]:
+            if method in ["Lagrange Interpolation", "Newton Divided Difference", "Linear Interpolation", "Cubic Spline Interpolation"]:
                 x_min, x_max = min(x_points), max(x_points)
                 x_smooth = np.linspace(x_min, x_max, 100).tolist()
                 

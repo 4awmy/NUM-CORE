@@ -44,6 +44,25 @@ class LagrangeInterpolationSolver(Solver):
                 total += term
             return total
 
+        def get_polynomial_str() -> str:
+            terms = []
+            for i in range(n):
+                if abs(y_points[i]) < 1e-12:
+                    continue
+                num_parts = []
+                den_val = 1.0
+                for j in range(n):
+                    if i != j:
+                        num_parts.append(f"(x - {x_points[j]:.4g})")
+                        den_val *= (x_points[i] - x_points[j])
+                
+                term_coef = y_points[i] / den_val
+                if not num_parts:
+                    terms.append(f"{term_coef:.4g}")
+                else:
+                    terms.append(f"{term_coef:.4g} * {' * '.join(num_parts)}")
+            return " + ".join(terms) if terms else "0"
+
         result_y = []
         x_data = []
         if target_x is not None:
@@ -61,7 +80,10 @@ class LagrangeInterpolationSolver(Solver):
             title="Lagrange Interpolation",
             x_data=x_data,
             y_data=result_y,
-            metadata={"method": "Lagrange"}
+            metadata={
+                "method": "Lagrange",
+                "polynomial_str": get_polynomial_str()
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:
@@ -107,12 +129,22 @@ class NewtonDifferenceTableSolver(Solver):
             raise ValueError("Invalid input points for Newton Difference Table (must be equispaced).")
 
         n = len(x_points)
+        h = float(x_points[1] - x_points[0])
         table = np.zeros((n, n))
         table[:, 0] = y_points
 
         for j in range(1, n):
             for i in range(n - j):
                 table[i, j] = table[i + 1, j - 1] - table[i, j - 1]
+
+        # Calculate divided difference table for metadata requirement
+        dd_table = np.zeros((n, n))
+        dd_table[:, 0] = y_points
+        import math
+        for j in range(1, n):
+            for i in range(n - j):
+                # f[x_i, ..., x_{i+j}] = Delta^j y_i / (j! * h^j)
+                dd_table[i, j] = table[i, j] / (math.factorial(j) * (h ** j))
 
         self._steps = []
         for j in range(1, n):
@@ -135,8 +167,9 @@ class NewtonDifferenceTableSolver(Solver):
             y_data=y_points.tolist(),
             metadata={
                 "difference_table": table.tolist(),
+                "dd_table": dd_table.tolist(),
                 "coefficients": coefficients,
-                "h": float(x_points[1] - x_points[0])
+                "h": h
             }
         )
 
@@ -186,29 +219,19 @@ class NewtonDividedDifferenceSolver(Solver):
             raise ValueError("Invalid input points for interpolation.")
 
         n = len(x_points)
-        memo: Dict[tuple, float] = {}
+        table = np.zeros((n, n))
+        table[:, 0] = y_points
 
-        def get_divided_diff(indices: tuple) -> float:
-            if indices in memo:
-                return memo[indices]
-            
-            if len(indices) == 1:
-                res = y_points[indices[0]]
-            else:
-                res = (get_divided_diff(indices[1:]) - get_divided_diff(indices[:-1])) / \
-                      (x_points[indices[-1]] - x_points[indices[0]])
-            
-            memo[indices] = res
-            return res
+        for j in range(1, n):
+            for i in range(n - j):
+                table[i, j] = (table[i + 1, j - 1] - table[i, j - 1]) / (x_points[i + j] - x_points[i])
 
+        coef = table[0, :].tolist()
         self._steps = []
-        coef = []
         for j in range(n):
-            c = get_divided_diff(tuple(range(j + 1)))
-            coef.append(c)
             self._steps.append(NumericalStep(
                 step_idx=j,
-                value=c,
+                value=coef[j],
                 details={
                     "description": f"Order {j} divided difference coefficient",
                     "indices": list(range(j + 1))
@@ -241,7 +264,10 @@ class NewtonDividedDifferenceSolver(Solver):
             title="Newton's Divided Difference Interpolation",
             x_data=x_data,
             y_data=result_y,
-            metadata={"coefficients": coef}
+            metadata={
+                "coefficients": coef,
+                "dd_table": table.tolist()
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:
@@ -268,6 +294,207 @@ class InterpolationSolver(NewtonDividedDifferenceSolver):
     pass
 
 
+class LinearInterpolationSolver(Solver):
+    """Linear Interpolation Solver."""
+
+    def __init__(self) -> None:
+        self._steps: List[NumericalStep] = []
+
+    def solve(self, **kwargs: Any) -> SimulationData:
+        """
+        Execute linear interpolation.
+        
+        Args:
+            x_points: List of x coordinates.
+            y_points: List of y coordinates.
+            target_x: Optional x value(s) to interpolate.
+            
+        Returns:
+            SimulationData containing the interpolation results.
+        """
+        x_points = np.array(kwargs.get("x_points") or [], dtype=float)
+        y_points = np.array(kwargs.get("y_points") or [], dtype=float)
+        target_x = kwargs.get("target_x")
+
+        if not self.validate_input(x_points=x_points, y_points=y_points):
+            raise ValueError("Invalid input points for interpolation.")
+
+        # Sort points by x
+        sort_idx = np.argsort(x_points)
+        x_points = x_points[sort_idx]
+        y_points = y_points[sort_idx]
+
+        self._steps = []
+
+        def evaluate(x: float) -> float:
+            if x <= x_points[0]:
+                i = 0
+            elif x >= x_points[-1]:
+                i = len(x_points) - 2
+            else:
+                i = np.searchsorted(x_points, x) - 1
+            
+            x0, x1 = x_points[i], x_points[i+1]
+            y0, y1 = y_points[i], y_points[i+1]
+            
+            val = y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+            return val
+
+        result_y = []
+        x_data = []
+        if target_x is not None:
+            if isinstance(target_x, (int, float)):
+                x_data = [float(target_x)]
+                result_y = [evaluate(float(target_x))]
+            else:
+                x_data = [float(x) for x in target_x]
+                result_y = [evaluate(x) for x in x_data]
+        else:
+            x_data = x_points.tolist()
+            result_y = y_points.tolist()
+
+        return SimulationData(
+            title="Linear Interpolation",
+            x_data=x_data,
+            y_data=result_y,
+            metadata={"method": "Linear"}
+        )
+
+    def get_steps(self) -> List[NumericalStep]:
+        return self._steps
+
+    def validate_input(self, **kwargs: Any) -> bool:
+        x_points = kwargs.get("x_points")
+        y_points = kwargs.get("y_points")
+        
+        if x_points is None or y_points is None:
+            return False
+        
+        try:
+            if len(x_points) != len(y_points) or len(x_points) < 2:
+                return False
+        except TypeError:
+            return False
+            
+        return True
+
+
+class CubicSplineSolver(Solver):
+    """Natural Cubic Spline Interpolation Solver."""
+
+    def __init__(self) -> None:
+        self._steps: List[NumericalStep] = []
+
+    def solve(self, **kwargs: Any) -> SimulationData:
+        """
+        Execute natural cubic spline interpolation.
+        
+        Args:
+            x_points: List of x coordinates.
+            y_points: List of y coordinates.
+            target_x: Optional x value(s) to interpolate.
+            
+        Returns:
+            SimulationData containing the interpolation results.
+        """
+        x_points = np.array(kwargs.get("x_points") or [], dtype=float)
+        y_points = np.array(kwargs.get("y_points") or [], dtype=float)
+        target_x = kwargs.get("target_x")
+
+        if not self.validate_input(x_points=x_points, y_points=y_points):
+            raise ValueError("Invalid input points for interpolation (need at least 3 points).")
+
+        # Sort points by x
+        sort_idx = np.argsort(x_points)
+        x = x_points[sort_idx]
+        y = y_points[sort_idx]
+        n = len(x) - 1
+
+        h = np.diff(x)
+        alpha = np.zeros(n)
+        for i in range(1, n):
+            alpha[i] = 3/h[i] * (y[i+1] - y[i]) - 3/h[i-1] * (y[i] - y[i-1])
+
+        l = np.ones(n+1)
+        mu = np.zeros(n+1)
+        z = np.zeros(n+1)
+
+        for i in range(1, n):
+            l[i] = 2 * (x[i+1] - x[i-1]) - h[i-1] * mu[i-1]
+            mu[i] = h[i] / l[i]
+            z[i] = (alpha[i] - h[i-1] * z[i-1]) / l[i]
+
+        c = np.zeros(n+1)
+        b = np.zeros(n)
+        d = np.zeros(n)
+
+        for j in range(n-1, -1, -1):
+            c[j] = z[j] - mu[j] * c[j+1]
+            b[j] = (y[j+1] - y[j]) / h[j] - h[j] * (c[j+1] + 2*c[j]) / 3
+            d[j] = (c[j+1] - c[j]) / (3 * h[j])
+
+        a = y[:-1]
+
+        self._steps = []
+
+        def evaluate(tx: float) -> float:
+            if tx <= x[0]:
+                i = 0
+            elif tx >= x[-1]:
+                i = n - 1
+            else:
+                i = np.searchsorted(x, tx) - 1
+                if i < 0: i = 0
+                if i >= n: i = n - 1
+            
+            dx = tx - x[i]
+            return a[i] + b[i]*dx + c[i]*dx**2 + d[i]*dx**3
+
+        result_y = []
+        x_data = []
+        if target_x is not None:
+            if isinstance(target_x, (int, float)):
+                x_data = [float(target_x)]
+                result_y = [evaluate(float(target_x))]
+            else:
+                x_data = [float(tx) for tx in target_x]
+                result_y = [evaluate(tx) for x in x_data]
+        else:
+            x_data = x.tolist()
+            result_y = y.tolist()
+
+        return SimulationData(
+            title="Cubic Spline Interpolation",
+            x_data=x_data,
+            y_data=result_y,
+            metadata={
+                "method": "Cubic Spline",
+                "a": a.tolist(),
+                "b": b.tolist(),
+                "c": c[:-1].tolist(),
+                "d": d.tolist()
+            }
+        )
+
+    def get_steps(self) -> List[NumericalStep]:
+        return self._steps
+
+    def validate_input(self, **kwargs: Any) -> bool:
+        x_points = kwargs.get("x_points")
+        y_points = kwargs.get("y_points")
+        
+        if x_points is None or y_points is None:
+            return False
+        
+        try:
+            if len(x_points) != len(y_points) or len(x_points) < 3:
+                return False
+        except TypeError:
+            return False
+            
+        return True
+
+
 class IntegrationSolver(Solver):
     """Numerical Integration Solver (Trapezoidal, Simpson's 1/3, 3/8)."""
 
@@ -286,87 +513,33 @@ class IntegrationSolver(Solver):
         Returns:
             SimulationData containing the integration result.
         """
-        x_points = np.array(kwargs.get("x_points") or [], dtype=float)
-        y_points = np.array(kwargs.get("y_points") or [], dtype=float)
         method = kwargs.get("method", "trapezoidal").lower()
-
-        if not self.validate_input(x_points=x_points, y_points=y_points, method=method):
-            raise ValueError(f"Invalid input for method {method}.")
-
-        n = len(x_points) - 1
-        h = (x_points[-1] - x_points[0]) / n
-        self._steps = []
-
+        
         if method == "trapezoidal":
-            result = (h / 2) * (y_points[0] + 2 * np.sum(y_points[1:-1]) + y_points[-1])
-            self._steps.append(NumericalStep(
-                step_idx=1,
-                value=result,
-                details={"method": "Trapezoidal Rule", "h": h, "n": n}
-            ))
+            solver: Solver = TrapezoidalSolver()
         elif method == "simpson13":
-            if n % 2 != 0:
-                raise ValueError("Simpson's 1/3 rule requires an even number of intervals.")
-            
-            result = (h / 3) * (y_points[0] + 4 * np.sum(y_points[1:-1:2]) + 2 * np.sum(y_points[2:-2:2]) + y_points[-1])
-            self._steps.append(NumericalStep(
-                step_idx=1,
-                value=result,
-                details={"method": "Simpson's 1/3 Rule", "h": h, "n": n}
-            ))
+            solver = SimpsonOneThirdSolver()
         elif method == "simpson38":
-            if n % 3 != 0:
-                raise ValueError("Simpson's 3/8 rule requires intervals to be a multiple of 3.")
-            
-            sum_val = y_points[0] + y_points[-1]
-            for i in range(1, n):
-                if i % 3 == 0:
-                    sum_val += 2 * y_points[i]
-                else:
-                    sum_val += 3 * y_points[i]
-            
-            result = (3 * h / 8) * sum_val
-            self._steps.append(NumericalStep(
-                step_idx=1,
-                value=result,
-                details={"method": "Simpson's 3/8 Rule", "h": h, "n": n}
-            ))
+            solver = SimpsonThreeEighthsSolver()
         else:
             raise ValueError(f"Unsupported integration method: {method}")
 
-        return SimulationData(
-            title=f"Numerical Integration ({method})",
-            x_data=x_points.tolist(),
-            y_data=[result],
-            metadata={"method": method, "total_integral": result}
-        )
+        result = solver.solve(**kwargs)
+        self._steps = solver.get_steps()
+        return result
 
     def get_steps(self) -> List[NumericalStep]:
         return self._steps
 
     def validate_input(self, **kwargs: Any) -> bool:
-        x_points = kwargs.get("x_points")
-        y_points = kwargs.get("y_points")
         method = kwargs.get("method", "trapezoidal").lower()
-
-        if x_points is None or y_points is None:
-            return False
-        
-        n_points = len(x_points)
-        if n_points != len(y_points) or n_points < 2:
-            return False
-
-        h = np.diff(x_points)
-        if not np.allclose(h, h[0]):
-            return False
-
-        n = n_points - 1
-        if method == "simpson13" and n % 2 != 0:
-            return False
-        if method == "simpson38" and n % 3 != 0:
-            return False
-
-        return True
+        if method == "trapezoidal":
+            return TrapezoidalSolver().validate_input(**kwargs)
+        elif method == "simpson13":
+            return SimpsonOneThirdSolver().validate_input(**kwargs)
+        elif method == "simpson38":
+            return SimpsonThreeEighthsSolver().validate_input(**kwargs)
+        return False
 
 
 class MidpointSolver(Solver):
@@ -458,17 +631,28 @@ class TrapezoidalSolver(Solver):
 
         result = (h / 2) * (y_data[0] + 2 * np.sum(y_data[1:-1]) + y_data[-1])
         
+        # Construct weighted sum string
+        terms = [f"{y_data[0]:.4f}"]
+        for y in y_data[1:-1]:
+            terms.append(f"2*({y:.4f})")
+        terms.append(f"{y_data[-1]:.4f}")
+        weighted_sum_str = f"({h:.4f}/2) * [" + " + ".join(terms) + "]"
+
         self._steps = [NumericalStep(
             step_idx=1,
             value=result,
-            details={"n": n, "h": h}
+            details={"n": n, "h": h, "weighted_sum": weighted_sum_str}
         )]
 
         return SimulationData(
             title="Trapezoidal Rule",
             x_data=x_data.tolist(),
             y_data=[result],
-            metadata={"total_integral": result}
+            metadata={
+                "total_integral": result,
+                "h_value": h,
+                "weighted_sum_str": weighted_sum_str
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:
@@ -483,19 +667,21 @@ class TrapezoidalSolver(Solver):
             return callable(f) and kwargs.get("a") is not None and kwargs.get("b") is not None and kwargs.get("n", 0) > 0
         
         if x_points is not None and y_points is not None:
-            return len(x_points) == len(y_points) and len(x_points) >= 2
+            if len(x_points) != len(y_points) or len(x_points) < 2:
+                return False
+            h = np.diff(x_points)
+            return np.allclose(h, h[0])
             
         return False
 
 
-class SimpsonsRuleSolver(Solver):
-    """Simpson's Rule Solver (1/3 and 3/8)."""
+class SimpsonOneThirdSolver(Solver):
+    """Simpson's 1/3 Rule Solver."""
 
     def __init__(self) -> None:
         self._steps: List[NumericalStep] = []
 
     def solve(self, **kwargs: Any) -> SimulationData:
-        method = kwargs.get("method", "1/3")
         f = kwargs.get("f")
         x_points = kwargs.get("x_points")
         y_points = kwargs.get("y_points")
@@ -515,38 +701,43 @@ class SimpsonsRuleSolver(Solver):
         else:
             raise ValueError("Either function 'f' or 'x_points'/'y_points' must be provided.")
 
-        if method == "1/3":
-            if n % 2 != 0:
-                raise ValueError("Simpson's 1/3 rule requires an even number of intervals.")
-            result = (h / 3) * (y_data[0] + 4 * np.sum(y_data[1:-1:2]) + 2 * np.sum(y_data[2:-2:2]) + y_data[-1])
-        elif method == "3/8":
-            if n % 3 != 0:
-                raise ValueError("Simpson's 3/8 rule requires intervals to be a multiple of 3.")
-            sum_val = y_data[0] + y_data[-1]
-            for i in range(1, n):
-                if i % 3 == 0:
-                    sum_val += 2 * y_data[i]
-                else:
-                    sum_val += 3 * y_data[i]
-            result = (3 * h / 8) * sum_val
-        else:
-            raise ValueError(f"Unsupported Simpson's method: {method}")
+        if n % 2 != 0:
+            raise ValueError("Simpson's 1/3 rule requires an even number of intervals (n).")
 
-        self._steps = [NumericalStep(step_idx=1, value=result, details={"method": method, "n": n, "h": h})]
+        result = (h / 3) * (y_data[0] + 4 * np.sum(y_data[1:-1:2]) + 2 * np.sum(y_data[2:-2:2]) + y_data[-1])
+        
+        # Construct weighted sum string
+        terms = [f"{y_data[0]:.4f}"]
+        for i in range(1, n):
+            weight = 4 if i % 2 != 0 else 2
+            terms.append(f"{weight}*({y_data[i]:.4f})")
+        terms.append(f"{y_data[-1]:.4f}")
+        weighted_sum_str = f"({h:.4f}/3) * [" + " + ".join(terms) + "]"
+
+        self._steps = [NumericalStep(
+            step_idx=1,
+            value=result,
+            details={"n": n, "h": h, "weighted_sum": weighted_sum_str},
+            check_name="n_even_check",
+            check_passed=True
+        )]
 
         return SimulationData(
-            title=f"Simpson's {method} Rule",
+            title="Simpson's 1/3 Rule",
             x_data=x_data.tolist(),
             y_data=[result],
-            metadata={"total_integral": result, "method": method}
+            metadata={
+                "total_integral": result,
+                "h_value": h,
+                "weighted_sum_str": weighted_sum_str,
+                "n_even_check": True
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:
         return self._steps
 
     def validate_input(self, **kwargs: Any) -> bool:
-        # Similar validation to Trapezoidal but with n constraints
-        method = kwargs.get("method", "1/3")
         f = kwargs.get("f")
         x_points = kwargs.get("x_points")
         y_points = kwargs.get("y_points")
@@ -558,12 +749,130 @@ class SimpsonsRuleSolver(Solver):
         elif x_points is not None and y_points is not None:
             if len(x_points) != len(y_points) or len(x_points) < 2: return False
             n = len(x_points) - 1
+            h = np.diff(x_points)
+            if not np.allclose(h, h[0]): return False
         else:
             return False
 
-        if method == "1/3" and n % 2 != 0: return False
-        if method == "3/8" and n % 3 != 0: return False
-        return True
+        return n > 0 and n % 2 == 0
+
+
+class SimpsonThreeEighthsSolver(Solver):
+    """Simpson's 3/8 Rule Solver."""
+
+    def __init__(self) -> None:
+        self._steps: List[NumericalStep] = []
+
+    def solve(self, **kwargs: Any) -> SimulationData:
+        f = kwargs.get("f")
+        x_points = kwargs.get("x_points")
+        y_points = kwargs.get("y_points")
+
+        if f is not None:
+            a = float(kwargs.get("a", 0))
+            b = float(kwargs.get("b", 0))
+            n = int(kwargs.get("n", 3))
+            h = (b - a) / n
+            x_data = np.linspace(a, b, n + 1)
+            y_data = np.array([f(x) for x in x_data])
+        elif x_points is not None and y_points is not None:
+            x_data = np.array(x_points, dtype=float)
+            y_data = np.array(y_points, dtype=float)
+            n = len(x_data) - 1
+            h = (x_data[-1] - x_data[0]) / n
+        else:
+            raise ValueError("Either function 'f' or 'x_points'/'y_points' must be provided.")
+
+        if n % 3 != 0:
+            raise ValueError("Simpson's 3/8 rule requires intervals (n) to be a multiple of 3.")
+
+        sum_val = y_data[0] + y_data[-1]
+        terms = [f"{y_data[0]:.4f}"]
+        for i in range(1, n):
+            if i % 3 == 0:
+                sum_val += 2 * y_data[i]
+                terms.append(f"2*({y_data[i]:.4f})")
+            else:
+                sum_val += 3 * y_data[i]
+                terms.append(f"3*({y_data[i]:.4f})")
+        terms.append(f"{y_data[-1]:.4f}")
+        
+        result = (3 * h / 8) * sum_val
+        weighted_sum_str = f"(3*{h:.4f}/8) * [" + " + ".join(terms) + "]"
+
+        self._steps = [NumericalStep(
+            step_idx=1,
+            value=result,
+            details={"n": n, "h": h, "weighted_sum": weighted_sum_str},
+            check_name="n_mod3_check",
+            check_passed=True
+        )]
+
+        return SimulationData(
+            title="Simpson's 3/8 Rule",
+            x_data=x_data.tolist(),
+            y_data=[result],
+            metadata={
+                "total_integral": result,
+                "h_value": h,
+                "weighted_sum_str": weighted_sum_str,
+                "n_mod3_check": True
+            }
+        )
+
+    def get_steps(self) -> List[NumericalStep]:
+        return self._steps
+
+    def validate_input(self, **kwargs: Any) -> bool:
+        f = kwargs.get("f")
+        x_points = kwargs.get("x_points")
+        y_points = kwargs.get("y_points")
+        
+        n = 0
+        if f is not None:
+            if not callable(f): return False
+            n = kwargs.get("n", 0)
+        elif x_points is not None and y_points is not None:
+            if len(x_points) != len(y_points) or len(x_points) < 2: return False
+            n = len(x_points) - 1
+            h = np.diff(x_points)
+            if not np.allclose(h, h[0]): return False
+        else:
+            return False
+
+        return n > 0 and n % 3 == 0
+
+
+class SimpsonsRuleSolver(Solver):
+    """Simpson's Rule Solver (1/3 and 3/8)."""
+
+    def __init__(self) -> None:
+        self._steps: List[NumericalStep] = []
+
+    def solve(self, **kwargs: Any) -> SimulationData:
+        method = kwargs.get("method", "1/3")
+        
+        if method == "1/3":
+            solver: Solver = SimpsonOneThirdSolver()
+        elif method == "3/8":
+            solver = SimpsonThreeEighthsSolver()
+        else:
+            raise ValueError(f"Unsupported Simpson's method: {method}")
+
+        result = solver.solve(**kwargs)
+        self._steps = solver.get_steps()
+        return result
+
+    def get_steps(self) -> List[NumericalStep]:
+        return self._steps
+
+    def validate_input(self, **kwargs: Any) -> bool:
+        method = kwargs.get("method", "1/3")
+        if method == "1/3":
+            return SimpsonOneThirdSolver().validate_input(**kwargs)
+        elif method == "3/8":
+            return SimpsonThreeEighthsSolver().validate_input(**kwargs)
+        return False
 
 
 class GaussianQuadratureSolver(Solver):
@@ -671,7 +980,11 @@ class NumericalDifferentiationSolver(Solver):
             title=f"Numerical Differentiation ({method})",
             x_data=[x],
             y_data=[result],
-            metadata={"method": method, "derivative": result}
+            metadata={
+                "method": method,
+                "derivative": result,
+                "h_value": h
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:

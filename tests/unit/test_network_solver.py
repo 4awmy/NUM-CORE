@@ -17,7 +17,9 @@ def test_gauss_seidel_simple_2x2():
     assert isinstance(result, SimulationData)
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
-    assert result.metadata["reordered"] is False
+    assert result.metadata["sdd_reordered"] is False
+    assert result.metadata["method_type"] == "successive"
+    assert all(result.metadata["sdd_check"])
 
 def test_gauss_seidel_row_swapping():
     solver = GaussSeidelSolver()
@@ -31,7 +33,8 @@ def test_gauss_seidel_row_swapping():
     
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
-    assert result.metadata["reordered"] is True
+    assert result.metadata["sdd_reordered"] is True
+    assert all(result.metadata["sdd_check"])
 
 def test_gauss_seidel_3x3():
     solver = GaussSeidelSolver()
@@ -105,7 +108,9 @@ def test_jacobi_simple_2x2():
     assert isinstance(result, SimulationData)
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
-    assert result.metadata["reordered"] is False
+    assert result.metadata["sdd_reordered"] is False
+    assert result.metadata["method_type"] == "simultaneous"
+    assert all(result.metadata["sdd_check"])
 
 def test_jacobi_3x3():
     solver = JacobiSolver()
@@ -139,4 +144,5 @@ def test_jacobi_row_swapping():
     
     assert np.allclose(result.y_data, expected_x, atol=1e-7)
     assert result.metadata["converged"] is True
-    assert result.metadata["reordered"] is True
+    assert result.metadata["sdd_reordered"] is True
+    assert all(result.metadata["sdd_check"])
