@@ -11,6 +11,8 @@ from numcore_engine.solvers.root_finder import (
     SecantSolver, 
     SimpleIterationSolver
 )
+from numcore_engine.solvers.comparison import ComparisonRunner
+from numcore_gui.smart_solver_panel import SmartSolverPanel
 
 class RootFinderPage(ctk.CTkFrame):
     EXAMPLE_PROBLEMS = {
@@ -179,11 +181,20 @@ class RootFinderPage(ctk.CTkFrame):
         self.tol_entry.insert(0, "1e-6")
 
         self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Equation", command=self.solve_action)
-        self.solve_button.grid(row=15, column=0, padx=20, pady=20)
+        self.solve_button.grid(row=15, column=0, padx=20, pady=(20, 10))
+
+        self.smart_solve_button = ctk.CTkButton(
+            self.input_frame, 
+            text="Smart Solve (Compare)", 
+            command=self.smart_solve_action,
+            fg_color="#1f538d",
+            hover_color="#14375e"
+        )
+        self.smart_solve_button.grid(row=16, column=0, padx=20, pady=(0, 20))
 
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=16, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=17, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
@@ -330,3 +341,42 @@ class RootFinderPage(ctk.CTkFrame):
 
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Runs all compatible root finders and shows comparison."""
+        self.error_label.configure(text="")
+        expression = self.func_entry.get()
+
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            tol = float(self.tol_entry.get() or 1e-6)
+            runner = ComparisonRunner(self.solvers)
+
+            kwargs = {
+                "expression": expression,
+                "tolerance": tol,
+                "max_iterations": 100
+            }
+
+            # Try to gather all possible inputs
+            try: kwargs["a"] = float(self.input1_entry.get())
+            except: pass
+            try: kwargs["b"] = float(self.input2_entry.get())
+            except: pass
+            try: kwargs["x0"] = float(self.input1_entry.get())
+            except: pass
+            try: kwargs["x1"] = float(self.input2_entry.get())
+            except: pass
+            try: kwargs["initial_guess"] = float(self.input1_entry.get())
+            except: pass
+
+            comparison_result = runner.run_comparison(**kwargs)
+
+            # Show SmartSolverPanel
+            SmartSolverPanel(self, comparison_result)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

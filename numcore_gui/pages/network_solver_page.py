@@ -5,6 +5,8 @@ from numcore_engine.models import SimulationData, NumericalStep
 from numcore_gui.help_system import HelpProvider
 from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.network_solver import GaussSeidelSolver, JacobiSolver
+from numcore_engine.solvers.comparison import ComparisonRunner
+from numcore_gui.smart_solver_panel import SmartSolverPanel
 
 class NetworkSolverPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -77,11 +79,20 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.tol_entry.insert(0, "1e-6")
 
         self.solve_button = ctk.CTkButton(self.input_frame, text="Solve System", command=self.solve_action)
-        self.solve_button.grid(row=11, column=0, padx=20, pady=20)
+        self.solve_button.grid(row=11, column=0, padx=20, pady=(20, 10))
+
+        self.smart_solve_button = ctk.CTkButton(
+            self.input_frame, 
+            text="Smart Solve (Compare)", 
+            command=self.smart_solve_action,
+            fg_color="#1f538d",
+            hover_color="#14375e"
+        )
+        self.smart_solve_button.grid(row=12, column=0, padx=20, pady=(0, 20))
 
         # Results area
         self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
-        self.results_panel.grid(row=12, column=0, padx=20, pady=10, sticky="nsew")
+        self.results_panel.grid(row=13, column=0, padx=20, pady=10, sticky="nsew")
         self.results_panel.grid_columnconfigure(0, weight=1)
         
         self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
@@ -92,7 +103,7 @@ class NetworkSolverPage(ctk.CTkFrame):
 
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=13, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=14, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
@@ -328,3 +339,36 @@ class NetworkSolverPage(ctk.CTkFrame):
             
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Runs all compatible linear system solvers and shows comparison."""
+        self.error_label.configure(text="")
+        try:
+            # Parse Matrix A
+            A = []
+            for i in range(self.current_matrix_size):
+                row = []
+                for j in range(self.current_matrix_size):
+                    val = float(self.matrix_entries[i][j].get())
+                    row.append(val)
+                A.append(row)
+
+            # Parse Vector b
+            b = []
+            for i in range(self.current_matrix_size):
+                val = float(self.vector_entries[i].get())
+                b.append(val)
+            
+            # Parse Tolerance
+            tol = float(self.tol_entry.get() or 1e-6)
+            
+            runner = ComparisonRunner(self.solvers)
+            kwargs = {"A": A, "b": b, "tol": tol}
+            
+            comparison_result = runner.run_comparison(**kwargs)
+            
+            # Show SmartSolverPanel
+            SmartSolverPanel(self, comparison_result)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

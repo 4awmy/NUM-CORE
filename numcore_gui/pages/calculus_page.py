@@ -14,6 +14,8 @@ from numcore_engine.solvers.calculus_engine import (
     GaussianQuadratureSolver,
     NumericalDifferentiationSolver
 )
+from numcore_engine.solvers.comparison import ComparisonRunner
+from numcore_gui.smart_solver_panel import SmartSolverPanel
 
 class CalculusPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
@@ -73,11 +75,20 @@ class CalculusPage(ctk.CTkFrame):
         self.n_entry.insert(0, "10")
 
         self.solve_button = ctk.CTkButton(self.input_frame, text="Execute Mission", command=self.solve_action)
-        self.solve_button.grid(row=9, column=0, padx=20, pady=20)
+        self.solve_button.grid(row=9, column=0, padx=20, pady=(20, 10))
+
+        self.smart_solve_button = ctk.CTkButton(
+            self.input_frame, 
+            text="Smart Solve (Compare)", 
+            command=self.smart_solve_action,
+            fg_color="#1f538d",
+            hover_color="#14375e"
+        )
+        self.smart_solve_button.grid(row=10, column=0, padx=20, pady=(0, 20))
 
         # Inline Error Display
         self.error_label = ctk.CTkLabel(self.input_frame, text="", text_color="red", font=ctk.CTkFont(size=11))
-        self.error_label.grid(row=10, column=0, padx=20, pady=5, sticky="w")
+        self.error_label.grid(row=11, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
@@ -196,3 +207,41 @@ class CalculusPage(ctk.CTkFrame):
 
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
+
+    def smart_solve_action(self):
+        """Runs all compatible calculus solvers and shows comparison."""
+        self.error_label.configure(text="")
+        expression = self.func_entry.get()
+        method = self.method_menu.get()
+
+        if not expression:
+            self.error_label.configure(text="Error: Expression is required.")
+            return
+
+        try:
+            f = SymbolicParser.parse_expression(expression)
+            
+            # Filter solvers based on current mode (Integration or Differentiation)
+            if method == "Differentiation":
+                # Only one differentiation solver currently, but we can compare methods if we had more
+                # For now, let's just compare integration methods if we are in integration mode
+                self.error_label.configure(text="Smart Solve is currently optimized for Integration methods.")
+                return
+
+            # Integration solvers
+            integration_solvers = {k: v for k, v in self.solvers.items() if k != "Differentiation"}
+            runner = ComparisonRunner(integration_solvers)
+
+            r_str = self.range_entry.get()
+            a, b = map(float, r_str.split(","))
+            n = int(self.n_entry.get())
+
+            kwargs = {"f": f, "a": a, "b": b, "n": n, "points": 3} # Default points for Gaussian
+            
+            comparison_result = runner.run_comparison(**kwargs)
+            
+            # Show SmartSolverPanel
+            SmartSolverPanel(self, comparison_result)
+
+        except Exception as e:
+            self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

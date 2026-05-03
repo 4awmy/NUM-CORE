@@ -15,6 +15,7 @@ from .calculus_engine import (
 )
 from .ode_solvers import EulerSolver, RungeKuttaSolver
 from .regression_solvers import LeastSquaresSolver
+from .comparison import ComparisonRunner
 
 __all__ = [
     "GaussSeidelSolver",
@@ -37,4 +38,5 @@ __all__ = [
     "EulerSolver",
     "RungeKuttaSolver",
     "LeastSquaresSolver",
+    "ComparisonRunner",
 ]
