@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from typing import Optional
 from numcore_engine.models import ComparisonResult, NumericalData
-from numcore_gui.theme import BLACK, PANEL, BORDER, SUCCESS, ERROR, WARN, ACCENT_BLUE
+from numcore_gui import theme
 
 
 class SmartSolverPanel(ctk.CTkFrame):
@@ -11,19 +11,19 @@ class SmartSolverPanel(ctk.CTkFrame):
     """
 
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, border_color=BORDER, border_width=1, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), border_color=theme.get_border_color(), border_width=1, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
 
         # Recommendation / Diagnostic header
-        self.header_frame = ctk.CTkFrame(self, corner_radius=8, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.header_frame = ctk.CTkFrame(self, corner_radius=8, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.header_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
         self.rec_title = ctk.CTkLabel(
             self.header_frame,
             text="Smart Recommendation",
             font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=SUCCESS,
+            text_color=theme.SUCCESS,
         )
         self.rec_title.pack(padx=15, pady=(12, 4), anchor="w")
 
@@ -41,8 +41,8 @@ class SmartSolverPanel(ctk.CTkFrame):
             self,
             label_text="Performance Comparison",
             corner_radius=8,
-            fg_color=BLACK,
-            label_fg_color=PANEL,
+            fg_color=theme.get_bg_color(),
+            label_fg_color=theme.get_panel_color(),
             height=200,
         )
         self.table_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
@@ -55,11 +55,11 @@ class SmartSolverPanel(ctk.CTkFrame):
             w.destroy()
 
         if result.all_diverged:
-            self.rec_title.configure(text="All Methods Diverged", text_color=WARN)
+            self.rec_title.configure(text="All Methods Diverged", text_color=theme.WARN)
             self.rec_label.configure(text=result.recommendation)
             self._render_diagnostic_rows(result)
         else:
-            self.rec_title.configure(text="Smart Recommendation", text_color=SUCCESS)
+            self.rec_title.configure(text="Smart Recommendation", text_color=theme.SUCCESS)
             self.rec_label.configure(text=result.recommendation)
             self._render_comparison_rows(result)
 
@@ -73,8 +73,8 @@ class SmartSolverPanel(ctk.CTkFrame):
         for r_idx, res in enumerate(result.results):
             is_best = res.title == result.best_method
             diverged = res.metadata.get("diverged", False)
-            bg = ACCENT_BLUE if is_best else ("transparent" if not diverged else "transparent")
-            text_col = ERROR if diverged else ("white" if not is_best else "black")
+            bg = theme.ACCENT_BLUE if is_best else ("transparent" if not diverged else "transparent")
+            text_col = theme.ERROR if diverged else ("white" if not is_best else "black")
 
             ctk.CTkLabel(self.table_frame, text=res.title, fg_color=bg, text_color=text_col).grid(
                 row=r_idx + 1, column=0, padx=5, pady=4, sticky="ew"
@@ -96,7 +96,7 @@ class SmartSolverPanel(ctk.CTkFrame):
             ctk.CTkLabel(self.table_frame, text=val).grid(row=r_idx + 1, column=3, padx=5, pady=4)
 
             status = "BEST" if is_best else ("DIVERGED" if diverged else "OK")
-            status_color = SUCCESS if is_best else (ERROR if diverged else "gray")
+            status_color = theme.SUCCESS if is_best else (theme.ERROR if diverged else "gray")
             ctk.CTkLabel(self.table_frame, text=status, text_color=status_color).grid(
                 row=r_idx + 1, column=4, padx=5, pady=4
             )

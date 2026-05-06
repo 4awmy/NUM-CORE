@@ -1,8 +1,10 @@
 ## Goal
+
 Add a 3rd option "Compare Both Methods" in the Linear Systems submenu.
 Runs Jacobi and Gauss-Seidel on the same input and shows a side-by-side Rich table.
 
 ## Expected Output
+
 ```
 +-------------------+--------------+--------------+---------+
 | Metric            |    Jacobi    | Gauss-Seidel | Winner  |
@@ -15,12 +17,14 @@ Runs Jacobi and Gauss-Seidel on the same input and shows a side-by-side Rich tab
 ```
 
 ## Tasks
-- [ ] Add option 3 "Compare Both Methods" to `network_solver_menu()` in `terminal.py`
-- [ ] Add `run_comparison()` method to `NumericalCLI`
-- [ ] Use same input prompts as `run_gauss_seidel()`
-- [ ] Run both `JacobiSolver` and `GaussSeidelSolver` on identical inputs
-- [ ] Build comparison Rich Table with per-row winner highlighting
-- [ ] Show both step-by-step tables (one per method) if user wants verbose output
+
+- [x] Add option 3 "Compare Both Methods" to `network_solver_menu()` in `terminal.py`
+- [x] Add `run_comparison()` method to `NumericalCLI`
+- [x] Use same input prompts as `run_gauss_seidel()`
+- [x] Run both `JacobiSolver` and `GaussSeidelSolver` on identical inputs
+- [x] Build comparison Rich Table with per-row winner highlighting
+- [x] Show both step-by-step tables (one per method) if user wants verbose output
 
 ## Files to Edit
+
 - `numcore_cli/terminal.py`

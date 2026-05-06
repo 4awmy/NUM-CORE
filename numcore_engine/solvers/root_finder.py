@@ -145,7 +145,8 @@ class NewtonRaphsonSolver(Solver):
         self._steps = []
         x_history: List[float] = []
         y_history: List[float] = []
-        error_history: List[float] = []
+        previous_error: Optional[float] = None
+        growing_error_count = 0
         diverged = False
 
         for i in range(max_iterations):
@@ -169,12 +170,16 @@ class NewtonRaphsonSolver(Solver):
             x_history.append(float(i))
             y_history.append(float(x_next))
 
-            # Divergence detection: 5 consecutive increases (needs 6 errors)
-            error_history.append(error)
-            if len(error_history) >= 6:
-                if all(error_history[j] < error_history[j + 1] for j in range(-6, -1)):
-                    diverged = True
-                    break
+            if previous_error is not None and error > previous_error:
+                growing_error_count += 1
+            else:
+                growing_error_count = 0
+            previous_error = error
+
+            if growing_error_count >= 5:
+                diverged = True
+                x_n = x_next
+                break
 
             if error < tolerance:
                 x_n = x_next
@@ -343,7 +348,8 @@ class SimpleIterationSolver(Solver):
         self._steps = []
         x_history: List[float] = []
         y_history: List[float] = []
-        error_history: List[float] = []
+        previous_error: Optional[float] = None
+        growing_error_count = 0
         diverged = False
 
         for i in range(max_iterations):
@@ -360,12 +366,16 @@ class SimpleIterationSolver(Solver):
             x_history.append(float(i))
             y_history.append(float(x_next))
 
-            # Divergence detection: 5 consecutive increases (needs 6 errors)
-            error_history.append(error)
-            if len(error_history) >= 6:
-                if all(error_history[j] < error_history[j + 1] for j in range(-6, -1)):
-                    diverged = True
-                    break
+            if previous_error is not None and error > previous_error:
+                growing_error_count += 1
+            else:
+                growing_error_count = 0
+            previous_error = error
+
+            if growing_error_count >= 5:
+                diverged = True
+                x_n = x_next
+                break
 
             if error < tolerance:
                 x_n = x_next

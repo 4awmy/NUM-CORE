@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import math
 from numcore_gui.visualization import PlotManager
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 from numcore_gui.result_panel import ResultPanel
 
 from numcore_gui.help_system import HelpProvider
@@ -114,14 +114,14 @@ class RootFinderPage(ctk.CTkFrame):
         ],
     }
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.input_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 1: Root Finding", font=ctk.CTkFont(size=18, weight="bold"))
@@ -197,7 +197,7 @@ class RootFinderPage(ctk.CTkFrame):
         self.error_label.grid(row=17, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
         self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
@@ -213,7 +213,7 @@ class RootFinderPage(ctk.CTkFrame):
         self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10)) # Adjust padding
 
         # Placeholder for Matplotlib plot
-        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=theme.get_bg_color(), corner_radius=5)
         self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew") # Adjusted grid
         
         # Initialize PlotManager
@@ -222,6 +222,14 @@ class RootFinderPage(ctk.CTkFrame):
         # Result Panel (Methodology Table)
         self.result_panel = ResultPanel(self.viz_frame)
         self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+
+        # Smart Solver Panel (initially hidden)
+        self.smart_panel_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.smart_panel_container.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+        self.smart_panel_container.grid_forget()  # Hidden by default
+        self.smart_panel_container.grid_columnconfigure(0, weight=1)
+        self.smart_panel_container.grid_rowconfigure(0, weight=1)
+        self.current_smart_panel = None
 
         # Solvers mapping
         self.solvers = {
@@ -232,6 +240,18 @@ class RootFinderPage(ctk.CTkFrame):
         }
 
         self.update_inputs("Newton-Raphson")
+
+    def update_theme(self):
+        """Update all widget colors when theme changes."""
+        self.configure(fg_color=theme.get_bg_color())
+        self.input_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.viz_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.plot_container.configure(fg_color="transparent")
+        self.plot_placeholder.configure(fg_color=theme.get_bg_color())
+        # Refresh the plot manager's theme
+        if hasattr(self, 'plot_manager') and self.plot_manager:
+            self.plot_manager._apply_dark_theme()
+            self.plot_manager.canvas.draw()
 
     def load_example(self, example_name):
         """Loads the selected example problem into the input fields."""
@@ -299,6 +319,14 @@ class RootFinderPage(ctk.CTkFrame):
     def solve_action(self):
         """Triggers the root finder solver and updates visualization."""
         self.error_label.configure(text="")
+        
+        # Show result panel and hide smart panel when doing regular solve
+        self.smart_panel_container.grid_forget()
+        if self.current_smart_panel:
+            self.current_smart_panel.destroy()
+            self.current_smart_panel = None
+        self.result_panel.grid()
+        
         method = self.method_menu.get()
         expression = self.func_input.get_expression()
 
@@ -347,7 +375,8 @@ class RootFinderPage(ctk.CTkFrame):
             if viz_type == "Solution Path":
                 self.plot_manager.plot_solution_path(steps, expression if method != "Simple Iteration" else None)
             else:
-                self.plot_manager.plot_iteration_history(steps)
+                # Convergence Error with log scale and tolerance threshold
+                self.plot_manager.plot_root_convergence(steps, f"{method} Convergence", tol)
 
         except Exception as e:
             self.error_label.configure(text=f"Error: {str(e)}")
@@ -385,8 +414,13 @@ class RootFinderPage(ctk.CTkFrame):
 
             comparison_result = runner.run_comparison(**kwargs)
 
-            # Show SmartSolverPanel
-            SmartSolverPanel(self, comparison_result)
+            # Hide result panel and show SmartSolverPanel
+            self.result_panel.grid_forget()
+            if self.current_smart_panel:
+                self.current_smart_panel.destroy()
+            self.smart_panel_container.grid()
+            self.current_smart_panel = SmartSolverPanel(self.smart_panel_container, comparison_result)
+            self.current_smart_panel.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
         except Exception as e:
             self.error_label.configure(text=f"Smart Solve Error: {str(e)}")
