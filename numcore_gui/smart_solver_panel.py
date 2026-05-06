@@ -10,7 +10,7 @@ class SmartSolverPanel(ctk.CTkFrame):
     Shows recommendation card and performance table, or diagnostic panel on all-diverge.
     """
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, comparison_result=None, **kwargs):
         super().__init__(master, fg_color=theme.get_bg_color(), border_color=theme.get_border_color(), border_width=1, **kwargs)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -47,6 +47,9 @@ class SmartSolverPanel(ctk.CTkFrame):
         )
         self.table_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
         self.table_frame.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+
+        if comparison_result is not None:
+            self.populate(comparison_result)
 
     def populate(self, result: ComparisonResult):
         """Fill the panel with a ComparisonResult."""

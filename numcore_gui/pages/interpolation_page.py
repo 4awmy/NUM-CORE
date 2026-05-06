@@ -110,6 +110,7 @@ class InterpolationPage(ctk.CTkFrame):
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1)
         self.viz_frame.grid_rowconfigure(1, weight=1)
+        self.viz_frame.grid_rowconfigure(2, weight=1)
         self.viz_frame.grid_columnconfigure(0, weight=1)
         
         self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=theme.get_bg_color(), corner_radius=5)
@@ -120,6 +121,14 @@ class InterpolationPage(ctk.CTkFrame):
         # Result Panel (Methodology Table)
         self.result_panel = ResultPanel(self.viz_frame)
         self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+
+        # Smart Solver Panel container (hidden by default)
+        self.smart_panel_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.smart_panel_container.grid(row=2, column=0, padx=10, pady=(5, 10), sticky="nsew")
+        self.smart_panel_container.grid_forget()
+        self.smart_panel_container.grid_columnconfigure(0, weight=1)
+        self.smart_panel_container.grid_rowconfigure(0, weight=1)
+        self.current_smart_panel = None
 
     def update_theme(self):
         """Update all widget colors when theme changes."""
@@ -268,7 +277,11 @@ class InterpolationPage(ctk.CTkFrame):
             comparison_result = runner.run_comparison(**kwargs)
             
             # Show SmartSolverPanel
-            SmartSolverPanel(self, comparison_result)
+            if self.current_smart_panel:
+                self.current_smart_panel.destroy()
+            self.smart_panel_container.grid()
+            self.current_smart_panel = SmartSolverPanel(self.smart_panel_container, comparison_result)
+            self.current_smart_panel.grid(row=0, column=0, sticky="nsew")
 
         except Exception as e:
             self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

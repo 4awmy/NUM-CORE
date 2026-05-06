@@ -99,8 +99,9 @@ class NetworkSolverPage(ctk.CTkFrame):
         # Right Panel: Visualization
         self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
-        self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
-        self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
+        self.viz_frame.grid_rowconfigure(0, weight=1)
+        self.viz_frame.grid_rowconfigure(1, weight=1)
+        self.viz_frame.grid_rowconfigure(2, weight=1)
         self.viz_frame.grid_columnconfigure(0, weight=1)
 
         # Plot Container
@@ -121,6 +122,13 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.result_panel = ResultPanel(self.viz_frame)
         self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
+        # Smart Solver Panel container (hidden by default)
+        self.smart_panel_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.smart_panel_container.grid(row=2, column=0, padx=10, pady=(5, 10), sticky="nsew")
+        self.smart_panel_container.grid_forget()
+        self.smart_panel_container.grid_columnconfigure(0, weight=1)
+        self.smart_panel_container.grid_rowconfigure(0, weight=1)
+        self.current_smart_panel = None
 
         # Solvers mapping
         self.solvers = {
@@ -331,7 +339,11 @@ class NetworkSolverPage(ctk.CTkFrame):
                 self.plot_manager.plot_comparison(steps_dict, "Method Comparison (Error vs Iteration)", tol)
             
             # Show SmartSolverPanel
-            SmartSolverPanel(self, comparison_result)
+            if self.current_smart_panel:
+                self.current_smart_panel.destroy()
+            self.smart_panel_container.grid()
+            self.current_smart_panel = SmartSolverPanel(self.smart_panel_container, comparison_result)
+            self.current_smart_panel.grid(row=0, column=0, sticky="nsew")
 
         except Exception as e:
             self.error_label.configure(text=f"Smart Solve Error: {str(e)}")
