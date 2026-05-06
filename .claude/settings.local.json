@@ -4,7 +4,10 @@
       "Bash(powershell:*)",
       "Bash(gemini:*)",
       "Bash(ls:*)",
-      "Bash(timeout 5 python:*)"
+      "Bash(timeout 5 python:*)",
+      "Bash(uv run:*)",
+      "Bash(gh pr:*)",
+      "Bash(python:*)"
     ]
   }
 }

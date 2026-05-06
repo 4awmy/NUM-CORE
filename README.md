@@ -60,7 +60,7 @@ Perform numerical integration and differentiation.
 ### Setup
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/omarh-ossam/NUM-CORE.git
+   git clone https://github.com/4awmy/NUM-CORE.git
    cd NUM-CORE
    ```
 
@@ -77,6 +77,11 @@ Perform numerical integration and differentiation.
    ```bash
    pip install -r requirements.txt
    ```
+
+---
+
+## 🏷️ Topics & Tags
+`numerical-methods` `python` `engineering` `mathematics` `simulation` `root-finding` `linear-algebra` `interpolation` `calculus` `regression` `ode-solver` `customtkinter` `matplotlib` `cli` `desktop-app`
 
 ---
 
