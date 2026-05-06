@@ -9,6 +9,7 @@ from numcore_gui.pages.chapter_1_app import Chapter1AppPage
 from numcore_gui.pages.chapter_2_app import Chapter2AppPage
 from numcore_gui.pages.chapter_3_app import Chapter3AppPage
 from numcore_gui.pages.chapter_4_app import Chapter4AppPage
+from numcore_gui.pages.chapter_5_app import Chapter5AppPage
 from numcore_gui.help_system import HelpProvider
 from numcore_gui import theme
 
@@ -29,7 +30,7 @@ class Dashboard(ctk.CTk):
         # Sidebar frame
         self.sidebar_frame = ctk.CTkFrame(self, width=220, corner_radius=0, fg_color=theme.get_panel_color())
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(13, weight=1)
+        self.sidebar_frame.grid_rowconfigure(16, weight=1)
 
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="NUM-CORE", font=ctk.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
@@ -66,17 +67,23 @@ class Dashboard(ctk.CTk):
         self.ch3_app_btn = ctk.CTkButton(self.sidebar_frame, text="Thermodynamic Fitting", command=self.show_ch3_app)
         self.ch3_app_btn.grid(row=12, column=0, padx=20, pady=2)
 
+        # ODE Section
+        self.ode_label = ctk.CTkLabel(self.sidebar_frame, text="ODE Solvers", font=ctk.CTkFont(size=12, weight="bold"))
+        self.ode_label.grid(row=13, column=0, padx=20, pady=(10, 5), sticky="w")
+        self.ch5_app_btn = ctk.CTkButton(self.sidebar_frame, text="Population Growth", command=self.show_ch5_app)
+        self.ch5_app_btn.grid(row=14, column=0, padx=20, pady=2)
+
         # Help button in sidebar
         self.help_info_label = ctk.CTkLabel(self.sidebar_frame, text="System Help:", anchor="w")
-        self.help_info_label.grid(row=13, column=0, padx=20, pady=(20, 0), sticky="s")
+        self.help_info_label.grid(row=16, column=0, padx=20, pady=(20, 0), sticky="s")
         self.help_button = HelpProvider.create_help_button(self.sidebar_frame, "calculus", text="Open Help Center", width=160)
-        self.help_button.grid(row=14, column=0, padx=20, pady=(5, 10), sticky="s")
+        self.help_button.grid(row=17, column=0, padx=20, pady=(5, 10), sticky="s")
 
         self.appearance_mode_label = ctk.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=15, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=18, column=0, padx=20, pady=(10, 0))
         self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
                                                                        command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=16, column=0, padx=20, pady=(10, 20))
+        self.appearance_mode_optionemenu.grid(row=19, column=0, padx=20, pady=(10, 20))
         self.appearance_mode_optionemenu.set("Dark")
 
         # Main content frame
@@ -104,6 +111,7 @@ class Dashboard(ctk.CTk):
         self.pages["ch2_app"] = Chapter2AppPage(self.main_frame)
         self.pages["ch3_app"] = Chapter3AppPage(self.main_frame)
         self.pages["ch4_app"] = Chapter4AppPage(self.main_frame)
+        self.pages["ch5_app"] = Chapter5AppPage(self.main_frame)
 
         # Show default page
         self.show_root_finder()
@@ -147,6 +155,10 @@ class Dashboard(ctk.CTk):
     def show_ch4_app(self):
         self.select_page("ch4_app")
         self.status_label.configure(text="Active: Ch 4 App - Work Done")
+
+    def show_ch5_app(self):
+        self.select_page("ch5_app")
+        self.status_label.configure(text="Active: Ch 5 App - ODE Population Growth")
 
     def select_page(self, page_name):
         # Hide all pages

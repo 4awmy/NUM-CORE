@@ -109,7 +109,7 @@ class SmartSolverPanel(ctk.CTkFrame):
             )
         for r_idx, res in enumerate(result.results):
             reason = res.metadata.get("error_reason", "Diverged — check initial values or parameters")
-            ctk.CTkLabel(self.table_frame, text=res.title, text_color=WARN).grid(
+            ctk.CTkLabel(self.table_frame, text=res.title, text_color=theme.WARN).grid(
                 row=r_idx + 1, column=0, padx=5, pady=4, sticky="ew"
             )
             ctk.CTkLabel(self.table_frame, text=reason, wraplength=500, justify="left").grid(
