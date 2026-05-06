@@ -3,7 +3,7 @@ import ast
 import numpy as np
 import re
 from numcore_gui.visualization import PlotManager
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.solvers.calculus_engine import (
@@ -18,7 +18,7 @@ from numcore_gui.smart_solver_panel import SmartSolverPanel
 
 class InterpolationPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
@@ -36,7 +36,7 @@ class InterpolationPage(ctk.CTkFrame):
         self.example_problems = self._load_example_problems_from_md()
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.input_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
 
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 4: Interpolation", font=ctk.CTkFont(size=18, weight="bold"))
@@ -106,13 +106,13 @@ class InterpolationPage(ctk.CTkFrame):
         self.error_label.grid(row=13, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1)
         self.viz_frame.grid_rowconfigure(1, weight=1)
         self.viz_frame.grid_columnconfigure(0, weight=1)
         
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=theme.get_bg_color(), corner_radius=5)
         self.plot_placeholder.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
@@ -120,6 +120,17 @@ class InterpolationPage(ctk.CTkFrame):
         # Result Panel (Methodology Table)
         self.result_panel = ResultPanel(self.viz_frame)
         self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+
+    def update_theme(self):
+        """Update all widget colors when theme changes."""
+        self.configure(fg_color=theme.get_bg_color())
+        self.input_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.viz_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.plot_placeholder.configure(fg_color=theme.get_bg_color())
+        # Refresh the plot manager's theme
+        if hasattr(self, 'plot_manager') and self.plot_manager:
+            self.plot_manager._apply_dark_theme()
+            self.plot_manager.canvas.draw()
 
     def _load_example_problems_from_md(self) -> list:
         try:

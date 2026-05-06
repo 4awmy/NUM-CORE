@@ -2,18 +2,18 @@ import customtkinter as ctk
 from numcore_gui.visualization import PlotManager
 from numcore_engine.solvers.root_finder import NewtonRaphsonSolver
 from numcore_gui.equation_input import EquationInputWidget
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 
 class Chapter1AppPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Problem & Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.input_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Beam Stress Analysis", font=ctk.CTkFont(size=18, weight="bold"))
@@ -59,7 +59,7 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.solve_button.grid(row=7, column=0, padx=20, pady=20)
 
         # Results area
-        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=BLACK, border_color=BORDER, border_width=1)
+        self.results_panel = ctk.CTkFrame(self.input_frame, corner_radius=5, fg_color=theme.get_bg_color(), border_color=theme.get_border_color(), border_width=1)
         self.results_panel.grid(row=8, column=0, padx=20, pady=10, sticky="nsew")
         self.results_panel.grid_columnconfigure(0, weight=1)
         
@@ -70,18 +70,30 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         
         self.viz_label = ctk.CTkLabel(self.viz_frame, text="Stress Convergence Plot", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.pack(pady=20)
 
-        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.viz_frame, fg_color=theme.get_bg_color(), corner_radius=5)
         self.plot_placeholder.pack(padx=20, pady=20, fill="both", expand=True)
         
         self.plot_manager = PlotManager(self.plot_placeholder)
 
         self.solver = NewtonRaphsonSolver()
+
+    def update_theme(self):
+        """Update all widget colors when theme changes."""
+        self.configure(fg_color=theme.get_bg_color())
+        self.input_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.results_panel.configure(fg_color=theme.get_bg_color(), border_color=theme.get_border_color())
+        self.viz_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.plot_placeholder.configure(fg_color=theme.get_bg_color())
+        # Refresh the plot manager's theme
+        if hasattr(self, 'plot_manager') and self.plot_manager:
+            self.plot_manager._apply_dark_theme()
+            self.plot_manager.canvas.draw()
 
     def solve_action(self):
         expression = self.func_input.get_expression()
@@ -101,7 +113,15 @@ class Chapter1AppPage(ctk.CTkFrame):
             if hasattr(self.master.master, "update_status"):
                 self.master.master.update_status("Beam Stress Solver", comp_time)
 
-            self.plot_manager.plot_solution_path(steps, expression)
+            iteration_labels = [f"Iter {step.step_idx}" for step in steps]
+            error_values = [step.error if step.error is not None else 0.0 for step in steps]
+            self.plot_manager.plot_bar(
+                iteration_labels,
+                error_values,
+                title="Stress Convergence Bar Chart",
+                xlabel="Iteration",
+                ylabel="Absolute Error"
+            )
             
             root = data.metadata.get("root")
             iters = data.metadata.get("iterations")

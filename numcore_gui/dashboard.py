@@ -10,7 +10,7 @@ from numcore_gui.pages.chapter_2_app import Chapter2AppPage
 from numcore_gui.pages.chapter_3_app import Chapter3AppPage
 from numcore_gui.pages.chapter_4_app import Chapter4AppPage
 from numcore_gui.help_system import HelpProvider
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 
 class Dashboard(ctk.CTk):
     def __init__(self):
@@ -18,7 +18,7 @@ class Dashboard(ctk.CTk):
 
         self.title("NUM-CORE | Numerical Methods")
         self.geometry("1280x800")
-        self.configure(fg_color=BLACK)
+        self.configure(fg_color=theme.get_bg_color())
         ctk.set_appearance_mode("dark")
 
         # Configure grid layout (2x2)
@@ -27,7 +27,7 @@ class Dashboard(ctk.CTk):
         self.grid_rowconfigure(1, weight=0) # Status bar
 
         # Sidebar frame
-        self.sidebar_frame = ctk.CTkFrame(self, width=220, corner_radius=0, fg_color=PANEL)
+        self.sidebar_frame = ctk.CTkFrame(self, width=220, corner_radius=0, fg_color=theme.get_panel_color())
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(13, weight=1)
 
@@ -80,13 +80,13 @@ class Dashboard(ctk.CTk):
         self.appearance_mode_optionemenu.set("Dark")
 
         # Main content frame
-        self.main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color=BLACK)
+        self.main_frame = ctk.CTkFrame(self, corner_radius=0, fg_color=theme.get_bg_color())
         self.main_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_rowconfigure(0, weight=1)
 
         # Status bar
-        self.status_bar = ctk.CTkFrame(self, height=25, corner_radius=0, fg_color=PANEL)
+        self.status_bar = ctk.CTkFrame(self, height=25, corner_radius=0, fg_color=theme.get_panel_color())
         self.status_bar.grid(row=1, column=0, columnspan=2, sticky="ew")
         self.status_label = ctk.CTkLabel(self.status_bar, text="System Ready", font=ctk.CTkFont(size=10))
         self.status_label.pack(side="left", padx=20)
@@ -158,6 +158,16 @@ class Dashboard(ctk.CTk):
 
     def change_appearance_mode_event(self, new_appearance_mode: str):
         ctk.set_appearance_mode(new_appearance_mode)
+        # Update colors after changing appearance mode
+        self.configure(fg_color=theme.get_bg_color())
+        self.sidebar_frame.configure(fg_color=theme.get_panel_color())
+        self.main_frame.configure(fg_color=theme.get_bg_color())
+        self.status_bar.configure(fg_color=theme.get_panel_color())
+        
+        # Update theme for all pages
+        for page in self.pages.values():
+            if hasattr(page, 'update_theme'):
+                page.update_theme()
 
 if __name__ == "__main__":
     app = Dashboard()

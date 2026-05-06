@@ -85,7 +85,26 @@ def test_divergence_detection():
     result = solver.solve(expression="1.1 * x", initial_guess=1.0, max_iterations=20)
 
     assert result.metadata["diverged"] is True
-    assert len(result.x_data) >= 6
+    assert result.metadata["iterations"] < 20
+    assert len(result.x_data) == result.metadata["iterations"]
+
+
+def test_newton_raphson_divergence_breaks_early():
+    from unittest.mock import patch
+    from numcore_engine.parser import SymbolicParser
+
+    solver = NewtonRaphsonSolver()
+
+    with patch.object(SymbolicParser, "get_derivative", return_value="dummy"), patch.object(
+        SymbolicParser,
+        "parse_expression",
+        side_effect=[lambda x: -2 * x, lambda x: 1.0],
+    ):
+        result = solver.solve(expression="x", initial_guess=1.0, max_iterations=50)
+
+    assert result.metadata["diverged"] is True
+    assert result.metadata["iterations"] == 6
+    assert len(solver.get_steps()) == 6
 
 
 def test_bisection_invalid_interval():
@@ -114,11 +133,11 @@ def test_simple_iteration_convergence_check():
     solver = SimpleIterationSolver()
     # x = cos(x), g'(x) = -sin(x), |g'(0.5)| = sin(0.5) approx 0.479 < 1
     result = solver.solve(expression="cos(x)", initial_guess=0.5)
-    assert result.metadata["convergence_passed"] is True
+    assert result.metadata["convergence_check_passed"] is True
 
     # x = x^2 + x - 2, g(x) = x^2 + x - 2, g'(x) = 2x + 1, |g'(2)| = 5 > 1
     result = solver.solve(expression="x**2 + x - 2", initial_guess=2.0)
-    assert result.metadata["convergence_passed"] is False
+    assert result.metadata["convergence_check_passed"] is False
 
 
 def test_newton_raphson_fallback():

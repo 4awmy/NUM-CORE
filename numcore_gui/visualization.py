@@ -8,7 +8,7 @@ import os
 from typing import List, Any, Callable, Optional
 from numcore_engine.models import SimulationData, NumericalStep
 from numcore_engine.parser import SymbolicParser
-from numcore_gui.theme import BLACK, PANEL, BORDER, TEXT_PRIMARY, ACCENT_BLUE, ACCENT_ORANGE
+from numcore_gui import theme
 
 class PlotManager:
     """
@@ -43,23 +43,29 @@ class PlotManager:
         self._style_toolbar()
 
     def _apply_dark_theme(self):
-        """Applies a dark theme to the matplotlib figure to match CustomTkinter."""
-        self.figure.patch.set_facecolor(BLACK)
-        self.ax.set_facecolor(BLACK)
-        self.ax.tick_params(colors='white', which='both')
-        self.ax.xaxis.label.set_color('white')
-        self.ax.yaxis.label.set_color('white')
-        self.ax.title.set_color('white')
+        """Applies a theme to the matplotlib figure matching the current appearance mode."""
+        bg_color = theme.get_bg_color()
+        border_color = theme.get_border_color()
+        text_color = theme.get_text_primary_color()
+        
+        self.figure.patch.set_facecolor(bg_color)
+        self.ax.set_facecolor(bg_color)
+        self.ax.tick_params(colors=text_color, which='both')
+        self.ax.xaxis.label.set_color(text_color)
+        self.ax.yaxis.label.set_color(text_color)
+        self.ax.title.set_color(text_color)
         for spine in self.ax.spines.values():
-            spine.set_edgecolor(BORDER)
-        self.ax.grid(True, linestyle='--', alpha=0.2, color=BORDER)
+            spine.set_edgecolor(border_color)
+        self.ax.grid(True, linestyle='--', alpha=0.2, color=border_color)
 
     def _style_toolbar(self):
-        """Attempts to style the standard Tkinter toolbar to match the dark theme."""
-        self.toolbar.config(background=PANEL)
+        """Attempts to style the standard Tkinter toolbar to match the current theme."""
+        panel_color = theme.get_panel_color()
+        text_color = theme.get_text_primary_color()
+        self.toolbar.config(background=panel_color)
         for child in self.toolbar.winfo_children():
             try:
-                child.config(background=PANEL, foreground='white')
+                child.config(background=panel_color, foreground=text_color)
             except:
                 pass
 
@@ -74,13 +80,13 @@ class PlotManager:
         self.ax.clear()
         self._apply_dark_theme()
         
-        self.ax.plot(data.x_data, data.y_data, color=ACCENT_BLUE, linewidth=2, label="Function")
+        self.ax.plot(data.x_data, data.y_data, color=theme.ACCENT_BLUE, linewidth=2, label="Function")
         
         # Plot scatter points if provided in metadata
         scatter_x = data.metadata.get("scatter_x")
         scatter_y = data.metadata.get("scatter_y")
         if scatter_x is not None and scatter_y is not None:
-            self.ax.scatter(scatter_x, scatter_y, color=ACCENT_ORANGE, s=50, zorder=5, label="Data Points")
+            self.ax.scatter(scatter_x, scatter_y, color=theme.ACCENT_ORANGE, s=50, zorder=5, label="Data Points")
             self.ax.legend()
 
         self.ax.set_title(data.title)
@@ -93,17 +99,24 @@ class PlotManager:
         self.ax.clear()
         self._apply_dark_theme()
         
-        bars = self.ax.bar(x, y, color=ACCENT_BLUE, alpha=0.7, edgecolor='white', linewidth=0.5)
+        text_color = theme.get_text_primary_color()
+        bars = self.ax.bar(x, y, color=theme.ACCENT_BLUE, alpha=0.7, edgecolor=text_color, linewidth=0.5)
         
         # Add value labels on top of bars
         for bar in bars:
             height = bar.get_height()
             self.ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:.2f}', ha='center', va='bottom', color='white', fontsize=8)
+                    f'{height:.2f}', ha='center', va='bottom', color=text_color, fontsize=8)
+
+        if len(x) > 0:
+            self.ax.margins(x=0.1, y=0.15)
+            if any(isinstance(label, str) and len(label) > 6 for label in x):
+                self.ax.tick_params(axis="x", labelrotation=30)
 
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
+        self.figure.tight_layout()
         self.canvas.draw()
 
     def animate_convergence(self, data: SimulationData):
@@ -111,7 +124,7 @@ class PlotManager:
         self.ax.clear()
         self._apply_dark_theme()
         
-        line, = self.ax.plot([], [], color=ACCENT_BLUE, linewidth=2, marker='o')
+        line, = self.ax.plot([], [], color=theme.ACCENT_BLUE, linewidth=2, marker='o')
         self.ax.set_title(data.title)
         self.ax.set_xlabel("Iteration")
         self.ax.set_ylabel("Value")
@@ -138,19 +151,25 @@ class PlotManager:
         )
         self.canvas.draw()
 
-    def plot_root_convergence(self, steps: List[NumericalStep]):
-        """Log-log or semi-log plot of errors vs iterations."""
+    def plot_root_convergence(self, steps: List[NumericalStep], title: str = "Root Convergence (Error vs Iteration)", tol: Optional[float] = None):
+        """Log-Y scale plot of errors vs iterations with optional tolerance threshold line."""
         self.ax.clear()
         self._apply_dark_theme()
         
         iterations = [step.step_idx for step in steps]
         errors = [step.error if step.error is not None and step.error > 0 else 1e-15 for step in steps]
         
-        self.ax.semilogy(iterations, errors, color=ACCENT_BLUE, marker='o', linewidth=2)
-        self.ax.set_title("Root Convergence (Error vs Iteration)")
+        self.ax.semilogy(iterations, errors, color=ACCENT_BLUE, marker='o', linewidth=2, label="Error")
+        
+        # Add tolerance threshold line if provided
+        if tol is not None and tol > 0:
+            self.ax.axhline(tol, color=ACCENT_ORANGE, linestyle='--', linewidth=2, label=f"Tolerance ({tol:.2e})")
+        
+        self.ax.set_title(title)
         self.ax.set_xlabel("Iteration")
         self.ax.set_ylabel("Error (log scale)")
         self.ax.grid(True, which="both", linestyle='--', alpha=0.2)
+        self.ax.legend()
         self.canvas.draw()
 
     def plot_solution_path(self, steps: List[NumericalStep], f_str: str):
@@ -168,8 +187,9 @@ class PlotManager:
         x_vals = np.linspace(x_min - margin, x_max + margin, 400)
         y_vals = [f(x) for x in x_vals]
         
-        self.ax.plot(x_vals, y_vals, color='white', alpha=0.4, label=f"f(x) = {f_str}")
-        self.ax.axhline(0, color=ACCENT_ORANGE, linestyle='--', alpha=0.5)
+        text_color = theme.get_text_primary_color()
+        self.ax.plot(x_vals, y_vals, color=text_color, alpha=0.4, label=f"f(x) = {f_str}")
+        self.ax.axhline(0, color=theme.ACCENT_ORANGE, linestyle='--', alpha=0.5)
         
         # Plot path — guard against NaN/complex intermediate guesses
         try:
@@ -177,7 +197,7 @@ class PlotManager:
         except Exception:
             path_y = [f(guesses[-1])]
             guesses = [guesses[-1]]
-        self.ax.plot(guesses, path_y, color=ACCENT_BLUE, marker='x', linestyle='-', linewidth=1, label="Search Path")
+        self.ax.plot(guesses, path_y, color=theme.ACCENT_BLUE, marker='x', linestyle='-', linewidth=1, label="Search Path")
         
         # Highlight root
         self.ax.scatter(guesses[-1], path_y[-1], color='#4caf50', s=100, zorder=5, label="Final Root")
@@ -200,8 +220,8 @@ class PlotManager:
         x_vals = np.linspace(x_min - margin, x_max + margin, 400)
         y_vals = [polynomial_f(x) for x in x_vals]
         
-        self.ax.plot(x_vals, y_vals, color=ACCENT_BLUE, linewidth=2, label="Interpolation Polynomial")
-        self.ax.scatter(x_pts, y_pts, color=ACCENT_ORANGE, s=50, zorder=5, label="Data Points")
+        self.ax.plot(x_vals, y_vals, color=theme.ACCENT_BLUE, linewidth=2, label="Interpolation Polynomial")
+        self.ax.scatter(x_pts, y_pts, color=theme.ACCENT_ORANGE, s=50, zorder=5, label="Data Points")
         
         if target_x is not None:
             target_y = polynomial_f(target_x)
@@ -224,12 +244,13 @@ class PlotManager:
         x_vals = np.linspace(a - margin, b + margin, 400)
         y_vals = [f(x) for x in x_vals]
         
-        self.ax.plot(x_vals, y_vals, color='white', linewidth=2)
+        text_color = theme.get_text_primary_color()
+        self.ax.plot(x_vals, y_vals, color=text_color, linewidth=2)
         
         # Fill area
         ix = np.linspace(a, b, 100)
         iy = [f(x) for x in ix]
-        self.ax.fill_between(ix, iy, color=ACCENT_BLUE, alpha=0.3, label=f"Area ({method})")
+        self.ax.fill_between(ix, iy, color=theme.ACCENT_BLUE, alpha=0.3, label=f"Area ({method})")
         
         self.ax.set_title(f"Numerical Integration: {method}")
         self.ax.set_xlabel("x")
@@ -245,7 +266,7 @@ class PlotManager:
         iterations = [step.step_idx for step in steps]
         errors = [step.error if step.error is not None else 0 for step in steps]
         
-        self.ax.plot(iterations, errors, color=ACCENT_BLUE, marker='o', linewidth=2)
+        self.ax.plot(iterations, errors, color=theme.ACCENT_BLUE, marker='o', linewidth=2)
         self.ax.set_title("Iteration Error History")
         self.ax.set_xlabel("Iteration")
         self.ax.set_ylabel("Error")
@@ -265,8 +286,9 @@ class PlotManager:
         
         tangent_y = [y0 + derivative * (x - x0) for x in x_vals]
         
-        self.ax.plot(x_vals, y_vals, color='white', linewidth=2, label=f"f(x) = {f_str}")
-        self.ax.plot(x_vals, tangent_y, color=ACCENT_ORANGE, linestyle='--', label=f"Tangent (m={derivative:.4f})")
+        text_color = theme.get_text_primary_color()
+        self.ax.plot(x_vals, y_vals, color=text_color, linewidth=2, label=f"f(x) = {f_str}")
+        self.ax.plot(x_vals, tangent_y, color=theme.ACCENT_ORANGE, linestyle='--', label=f"Tangent (m={derivative:.4f})")
         self.ax.scatter(x0, y0, color='#f44336', s=50, zorder=5)
         
         self.ax.set_title(f"Derivative at x={x0}")
@@ -281,7 +303,8 @@ class PlotManager:
         self._apply_dark_theme()
         
         if len(A) != 2 or len(A[0]) != 2:
-            self.ax.text(0.5, 0.5, "Vector field only for 2x2 systems", ha='center', va='center', color='white')
+            text_color = theme.get_text_primary_color()
+            self.ax.text(0.5, 0.5, "Vector field only for 2x2 systems", ha='center', va='center', color=text_color)
             self.canvas.draw()
             return
 
@@ -313,7 +336,8 @@ class PlotManager:
             self.ax.set_ylim(sol[1]-5, sol[1]+5)
             
         except Exception as e:
-            self.ax.text(0.5, 0.5, f"Error: {str(e)}", ha='center', va='center', color='white')
+            text_color = theme.get_text_primary_color()
+            self.ax.text(0.5, 0.5, f"Error: {str(e)}", ha='center', va='center', color=text_color)
 
         self.ax.set_title("Linear System Visualization")
         self.ax.set_xlabel("x1")
@@ -345,19 +369,57 @@ class PlotManager:
         except Exception:
             self.canvas.draw()
             return
-        self.ax.plot(x_vals, y_vals, color='white', linewidth=2, label=f"f(x)")
-        self.ax.axhline(0, color=ACCENT_ORANGE, linestyle='--', alpha=0.4)
+        
+        text_color = theme.get_text_primary_color()
+        self.ax.plot(x_vals, y_vals, color=text_color, linewidth=2, label=f"f(x)")
+        self.ax.axhline(0, color=theme.ACCENT_ORANGE, linestyle='--', alpha=0.4)
         n = len(steps)
         for i, step in enumerate(steps):
             alpha = 0.2 + 0.6 * (i / max(n - 1, 1))
             a = step.details.get('a', step.value)
             b = step.details.get('b', step.value)
-            self.ax.axvline(a, color=ACCENT_BLUE, alpha=alpha, linewidth=0.8)
-            self.ax.axvline(b, color=ACCENT_BLUE, alpha=alpha, linewidth=0.8)
+            self.ax.axvline(a, color=theme.ACCENT_BLUE, alpha=alpha, linewidth=0.8)
+            self.ax.axvline(b, color=theme.ACCENT_BLUE, alpha=alpha, linewidth=0.8)
         root = steps[-1].value
         self.ax.scatter([root], [0], color='#4caf50', s=80, zorder=5, label="Root")
         self.ax.set_title("Bisection: Bracket Convergence")
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("f(x)")
         self.ax.legend()
+        self.canvas.draw()
+
+    def plot_comparison(self, steps_dict: dict, title: str = "Method Comparison", tol: Optional[float] = None):
+        """
+        Overlay multiple error curves from different solvers.
+        
+        Args:
+            steps_dict: Dict mapping method name -> list of NumericalStep
+            title: Plot title
+            tol: Optional tolerance threshold line
+        """
+        self.ax.clear()
+        self._apply_dark_theme()
+        
+        colors = [theme.ACCENT_BLUE, theme.ACCENT_ORANGE, '#4caf50', '#f44336', '#9c27b0', '#ff9800']
+        
+        for idx, (method_name, steps) in enumerate(steps_dict.items()):
+            if not steps:
+                continue
+            
+            iterations = [step.step_idx for step in steps]
+            errors = [step.error if step.error is not None and step.error > 0 else 1e-15 for step in steps]
+            
+            color = colors[idx % len(colors)]
+            self.ax.semilogy(iterations, errors, color=color, marker='o', linewidth=2, label=method_name)
+        
+        # Add tolerance threshold line if provided
+        if tol is not None and tol > 0:
+            text_color = theme.get_text_primary_color()
+            self.ax.axhline(tol, color=text_color, linestyle='--', linewidth=2, alpha=0.5, label=f"Tolerance ({tol:.2e})")
+        
+        self.ax.set_title(title)
+        self.ax.set_xlabel("Iteration")
+        self.ax.set_ylabel("Error (log scale)")
+        self.ax.grid(True, which="both", linestyle='--', alpha=0.2)
+        self.ax.legend(loc='best')
         self.canvas.draw()

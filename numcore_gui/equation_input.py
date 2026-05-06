@@ -4,7 +4,7 @@ import sympy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from numcore_engine.parser import SymbolicParser
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 
 class EquationInputWidget(ctk.CTkFrame):
     """
@@ -19,7 +19,7 @@ class EquationInputWidget(ctk.CTkFrame):
         on_change: Optional[Callable] = None,
         **kwargs
     ):
-        super().__init__(master, fg_color=PANEL, **kwargs)
+        super().__init__(master, fg_color=theme.get_panel_color(), **kwargs)
         
         self.on_change = on_change
         self._debounce_timer = None
@@ -63,18 +63,18 @@ class EquationInputWidget(ctk.CTkFrame):
         self.error_label.grid(row=3, column=0, sticky="w", padx=5)
 
         # Preview Canvas
-        self.preview_frame = ctk.CTkFrame(self, height=60, fg_color=BLACK)
+        self.preview_frame = ctk.CTkFrame(self, height=60, fg_color=theme.get_bg_color())
         self.preview_frame.grid(row=4, column=0, sticky="ew", padx=5, pady=5)
         self.preview_frame.grid_propagate(False)
         
-        self.fig = Figure(figsize=(4, 0.6), dpi=100, facecolor=BLACK)
+        self.fig = Figure(figsize=(4, 0.6), dpi=100, facecolor=theme.get_bg_color())
         self.ax = self.fig.add_subplot(111)
         self.ax.axis('off')
-        self.ax.set_facecolor(BLACK)
+        self.ax.set_facecolor(theme.get_bg_color())
         
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.preview_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
-        self.canvas.get_tk_widget().configure(bg=BLACK)
+        self.canvas.get_tk_widget().configure(bg=theme.get_bg_color())
 
 
     def _insert_symbol(self, symbol: str):
