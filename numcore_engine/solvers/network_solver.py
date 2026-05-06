@@ -235,6 +235,17 @@ class NetworkSolver:
         self.solver = GaussSeidelSolver()
 
     def solve(self, **kwargs: Any) -> SimulationData:
+        """
+        Execute the network solver (defaults to Gauss-Seidel).
+
+        Args:
+            matrix (or A): Coefficient matrix.
+            vector (or b): Constant vector.
+            **kwargs: Additional arguments passed to the underlying solver.
+
+        Returns:
+            SimulationData containing the solution.
+        """
         # Map GUI-style arguments to solver-style arguments
         if "matrix" in kwargs and "A" not in kwargs:
             kwargs["A"] = kwargs.pop("matrix")

@@ -37,33 +37,33 @@ class Dashboard(ctk.CTk):
         # Root Finding Section
         self.root_label = ctk.CTkLabel(self.sidebar_frame, text="Root Finding", font=ctk.CTkFont(size=12, weight="bold"))
         self.root_label.grid(row=1, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ch1_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 1 Solver", command=self.show_root_finder)
+        self.ch1_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Root Solver", command=self.show_root_finder)
         self.ch1_solver_btn.grid(row=2, column=0, padx=20, pady=2)
-        self.ch1_app_btn = ctk.CTkButton(self.sidebar_frame, text="Beam Stress App", command=self.show_ch1_app)
+        self.ch1_app_btn = ctk.CTkButton(self.sidebar_frame, text="Structural Analysis", command=self.show_ch1_app)
         self.ch1_app_btn.grid(row=3, column=0, padx=20, pady=2)
 
         # Linear Systems Section
         self.linear_label = ctk.CTkLabel(self.sidebar_frame, text="Linear Systems", font=ctk.CTkFont(size=12, weight="bold"))
         self.linear_label.grid(row=4, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ch2_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 2 Solver", command=self.show_network_solver)
+        self.ch2_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Linear Solver", command=self.show_network_solver)
         self.ch2_solver_btn.grid(row=5, column=0, padx=20, pady=2)
-        self.ch2_app_btn = ctk.CTkButton(self.sidebar_frame, text="Circuit Analysis App", command=self.show_ch2_app)
+        self.ch2_app_btn = ctk.CTkButton(self.sidebar_frame, text="Electrical Network", command=self.show_ch2_app)
         self.ch2_app_btn.grid(row=6, column=0, padx=20, pady=2)
 
         # Interpolation Section
         self.interp_label = ctk.CTkLabel(self.sidebar_frame, text="Interpolation", font=ctk.CTkFont(size=12, weight="bold"))
         self.interp_label.grid(row=7, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ch4_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 4 Solver", command=self.show_interpolation)
+        self.ch4_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Interpolation Solver", command=self.show_interpolation)
         self.ch4_solver_btn.grid(row=8, column=0, padx=20, pady=2)
-        self.ch4_app_btn = ctk.CTkButton(self.sidebar_frame, text="Work Done App", command=self.show_ch4_app)
+        self.ch4_app_btn = ctk.CTkButton(self.sidebar_frame, text="Mechanical Work", command=self.show_ch4_app)
         self.ch4_app_btn.grid(row=9, column=0, padx=20, pady=2)
 
         # Integration & Calc Section
         self.calc_label = ctk.CTkLabel(self.sidebar_frame, text="Integration & Calc", font=ctk.CTkFont(size=12, weight="bold"))
         self.calc_label.grid(row=10, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ch3_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Ch 3 Solver", command=self.show_calculus)
+        self.ch3_solver_btn = ctk.CTkButton(self.sidebar_frame, text="Calculus Solver", command=self.show_calculus)
         self.ch3_solver_btn.grid(row=11, column=0, padx=20, pady=2)
-        self.ch3_app_btn = ctk.CTkButton(self.sidebar_frame, text="Data Fitting App", command=self.show_ch3_app)
+        self.ch3_app_btn = ctk.CTkButton(self.sidebar_frame, text="Thermodynamic Fitting", command=self.show_ch3_app)
         self.ch3_app_btn.grid(row=12, column=0, padx=20, pady=2)
 
         # Help button in sidebar

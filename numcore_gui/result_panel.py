@@ -55,6 +55,8 @@ class ResultPanel(ctk.CTkFrame):
             summary_text += f"\nFormula Breakdown:\n{data.metadata['weighted_sum_str']}\n"
         if "polynomial_str" in data.metadata:
             summary_text += f"\nPolynomial:\n{data.metadata['polynomial_str']}\n"
+        if "equation" in data.metadata:
+            summary_text += f"\nEquation:\n{data.metadata['equation']}\n"
         if "target_x" in data.metadata and data.metadata.get("target_x") is not None:
             y_val = data.metadata.get('interpolated_y')
             if y_val is not None:
@@ -73,7 +75,12 @@ class ResultPanel(ctk.CTkFrame):
             all_keys.update(s.details.keys())
         
         # Preferred order for common keys
-        preferred = ["x", "y", "a", "b", "f(a)", "f(b)", "c", "f(c)", "x0", "x1", "f(x0)", "f(x1)", "x2", "weight", "weighted_y"]
+        preferred = [
+            "x", "y", "a", "b", "f(a)", "f(b)", "c", "f(c)", 
+            "x0", "x1", "f(x0)", "f(x1)", "x2", "weight", "weighted_y",
+            "y_prime", "y_double_prime", "y_triple_prime", "y_quad_prime",
+            "sum_x", "sum_y", "sum_xx", "sum_xy", "sum_x2y", "sum_x3", "sum_x4"
+        ]
         
         # Handle difference table keys (diff_1, diff_2, dd_1, dd_2, etc.)
         diff_keys = sorted([k for k in all_keys if k.startswith("diff_") or k.startswith("dd_")], 
@@ -100,8 +107,13 @@ class ResultPanel(ctk.CTkFrame):
             display_name = h
             if h == "x": display_name = "x_i"
             elif h == "y": display_name = "y_i"
+            elif h == "y_prime": display_name = "y'"
+            elif h == "y_double_prime": display_name = "y''"
+            elif h == "y_triple_prime": display_name = "y'''"
+            elif h == "y_quad_prime": display_name = "y''''"
             elif h.startswith("diff_"): display_name = f"Δ^{h.split('_')[1]}y"
             elif h.startswith("dd_"): display_name = f"Order {h.split('_')[1]}"
+            elif h.startswith("sum_"): display_name = f"Σ{h[4:]}"
             
             lbl = ctk.CTkLabel(self.table_frame, text=display_name, font=ctk.CTkFont(weight="bold", size=11))
             lbl.grid(row=0, column=i, padx=10, pady=5, sticky="nsew")

@@ -67,13 +67,13 @@ def main():
     Main entry point for the NUM-CORE application.
     Parses arguments and launches the chosen interface.
     """
+    console = Console()
     # Register custom Matplotlib style for True Black theme
     style_path = os.path.join(os.path.dirname(__file__), "numcore_gui", "styles", "numcore_black.mplstyle")
     if os.path.exists(style_path):
         plt.style.use(style_path)
 
     parser = argparse.ArgumentParser(
-
         description="NUM-CORE: A Professional Numerical Computation Suite",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -102,15 +102,15 @@ Examples:
             elif choice == 2:
                 launch_gui()
             else:
-                print("[SYSTEM] Exiting...")
+                console.print("[bold yellow][SYSTEM][/bold yellow] Exiting...")
                 sys.exit(0)
                 
     except KeyboardInterrupt:
-        print("\n[SYSTEM] Interrupted by user. Exiting...")
+        console.print("\n[bold yellow][SYSTEM][/bold yellow] Interrupted by user. Exiting...")
         sys.exit(0)
     except Exception as e:
         import traceback
-        print(f"\n[CRITICAL ERROR] {str(e)}")
+        console.print(f"\n[bold red][CRITICAL ERROR][/bold red] {str(e)}")
         traceback.print_exc()
         sys.exit(1)
 

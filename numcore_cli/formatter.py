@@ -1,3 +1,5 @@
+import csv
+from datetime import datetime
 from typing import List, Optional, Any, Dict
 
 from rich.console import Console
@@ -551,9 +553,6 @@ class NumericalFormatter:
         Exports numerical steps to a CSV file.
         Columns: step_idx, value, error, plus all keys found in 'details'.
         """
-        import csv
-        from datetime import datetime
-
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"results_{method_name.lower().replace(' ', '_')}_{timestamp}.csv"
