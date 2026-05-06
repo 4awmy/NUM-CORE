@@ -58,6 +58,7 @@ def test_gauss_seidel_divergence():
     
     assert result.metadata["diverged"] is True
     assert result.metadata["converged"] is False
+    assert len(solver.get_steps()) < 50
 
 def test_gauss_seidel_invalid_input():
     solver = GaussSeidelSolver()
@@ -133,6 +134,7 @@ def test_jacobi_divergence():
     
     assert result.metadata["diverged"] is True
     assert result.metadata["converged"] is False
+    assert len(solver.get_steps()) < 50
 
 def test_jacobi_row_swapping():
     solver = JacobiSolver()

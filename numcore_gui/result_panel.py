@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from typing import List, Dict, Any, Optional
 from numcore_engine.models import NumericalStep, SimulationData
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 
 class ResultPanel(ctk.CTkFrame):
     """
@@ -9,13 +9,13 @@ class ResultPanel(ctk.CTkFrame):
     Matches the 'Lecturer Methodology Tables' requirement.
     """
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, border_color=BORDER, border_width=1, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), border_color=theme.get_border_color(), border_width=1, **kwargs)
         
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1) # Table takes most space
         
         # Summary Frame
-        self.summary_frame = ctk.CTkFrame(self, corner_radius=5, fg_color=PANEL)
+        self.summary_frame = ctk.CTkFrame(self, corner_radius=5, fg_color=theme.get_panel_color())
         self.summary_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
         
         self.summary_label = ctk.CTkLabel(
@@ -31,8 +31,8 @@ class ResultPanel(ctk.CTkFrame):
             self, 
             label_text="Methodology Steps / Table", 
             corner_radius=5,
-            fg_color=BLACK,
-            label_fg_color=PANEL
+            fg_color=theme.get_bg_color(),
+            label_fg_color=theme.get_panel_color()
         )
         self.table_frame.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
         self.table_frame.grid_columnconfigure(0, weight=1)

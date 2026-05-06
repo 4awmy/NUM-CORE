@@ -56,6 +56,28 @@ class NumericalCLI:
             filename = self.formatter.export_steps_to_csv(steps, method_name)
             self.console.print(f"[bold green]Successfully exported to {filename}[/bold green]")
 
+    def _show_divergence_warning(self):
+        """Display a standard warning when a solver reports divergence."""
+        warning_text = (
+            "[bold yellow]WARNING: Method is DIVERGING — error grew for 5 consecutive iterations.[/bold yellow]\n"
+            "For root finding: try a closer initial guess.\n"
+            "For linear systems: check that your matrix is diagonally dominant."
+        )
+        self.console.print(
+            Panel(
+                warning_text,
+                title="[bold yellow]Warning[/bold yellow]",
+                border_style="yellow",
+                padding=(1, 2),
+                expand=False,
+            )
+        )
+
+    def _warn_if_diverged(self, result: Any):
+        """Print a divergence warning when the solver result marks divergence."""
+        if getattr(result, "metadata", {}).get("diverged"):
+            self._show_divergence_warning()
+
     def clear_screen(self):
         """Clear the terminal screen."""
         self.console.clear()
@@ -337,6 +359,7 @@ class NumericalCLI:
         solver = EulerSolver()
         try:
             result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_euler_steps(self.last_steps)
             self.console.print(Panel(
@@ -381,6 +404,7 @@ class NumericalCLI:
         solver = RungeKuttaSolver()
         try:
             result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_rk4_steps(self.last_steps)
             self.console.print(Panel(
@@ -428,6 +452,7 @@ class NumericalCLI:
         solver = LeastSquaresSolver()
         try:
             result = solver.solve(x_points=x_points, y_points=y_points)
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_least_squares_steps(self.last_steps)
             self.console.print(Panel(
@@ -504,6 +529,7 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_newton_raphson_steps(self.last_steps)
             self.console.print(Panel(
@@ -555,6 +581,7 @@ class NumericalCLI:
                 tolerance=tolerance,
                 max_iterations=max_iterations
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_simple_iteration_steps(self.last_steps)
             self.console.print(Panel(
@@ -588,29 +615,26 @@ class NumericalCLI:
                 choices=[str(i) for i in range(1, len(options) + 1)],
                 show_choices=False
             )
-
-            if choice == 1:
-                self.run_gauss_seidel()
-            elif choice == 2:
-                self.run_jacobi()
-            elif choice == 3:
-                self.run_comparison()
-            elif choice == 4:
-                break
-
-    def run_comparison(self):
-        """Run both Jacobi and Gauss-Seidel on the same input and compare."""
-        self.clear_screen()
-        self.display_header("Method Comparison", "Jacobi vs Gauss-Seidel")
-
+    def _collect_linear_system_inputs(
+        self,
+        example_matrix: List[List[float]],
+        example_b: List[float],
+        example_x0: List[float],
+        example_tol: float,
+        example_max_iter: int,
+        example_lines: List[str],
+    ):
+        """Prompt for a linear-system solve using the standard Gauss-Seidel input flow."""
         is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
-        
+
         if is_example:
-            matrix = [[4.0, -1.0, -1.0], [-1.0, 4.0, -1.0], [-1.0, -1.0, 4.0]]
-            b = [3.0, 2.0, 1.0]
-            x0 = [0.0, 0.0, 0.0]
-            tol = 1e-6
-            max_iter = 100
+            for line in example_lines:
+                self.console.print(f"[bold cyan]{line}[/bold cyan]")
+            matrix = example_matrix
+            b = example_b
+            x0 = example_x0
+            tol = example_tol
+            max_iter = example_max_iter
         else:
             n = IntPrompt.ask("Enter number of equations", default=3)
             matrix = []
@@ -619,19 +643,171 @@ class NumericalCLI:
                     row_str = Prompt.ask(f"Enter coefficients for equation {i+1} (space separated)")
                     try:
                         row = [float(x) for x in row_str.split()]
-                        if len(row) != n: continue
+                        if len(row) != n:
+                            self.console.print(f"[bold red]Error: Expected {n} coefficients, got {len(row)}[/bold red]")
+                            continue
                         matrix.append(row)
                         break
-                    except ValueError: pass
-            
-            b_str = Prompt.ask("Enter constants b (space separated)")
-            b = [float(x) for x in b_str.split()]
-            
-            initial_guess_str = Prompt.ask("Enter initial guess (space separated)", default=" ".join(["0"]*n))
-            x0 = [float(x) for x in initial_guess_str.split()]
-            
+                    except ValueError:
+                        self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+
+            while True:
+                b_str = Prompt.ask("Enter constants b (space separated)")
+                try:
+                    b = [float(x) for x in b_str.split()]
+                    if len(b) != n:
+                        self.console.print(f"[bold red]Error: Expected {n} constants, got {len(b)}[/bold red]")
+                        continue
+                    break
+                except ValueError:
+                    self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+
+            initial_guess_str = Prompt.ask("Enter initial guess (space separated)", default=" ".join(["0"] * n))
+            try:
+                x0 = [float(x) for x in initial_guess_str.split()]
+                if len(x0) != n:
+                    x0 = [0.0] * n
+            except ValueError:
+                x0 = [0.0] * n
+
             tol = FloatPrompt.ask("Enter tolerance", default=1e-6)
             max_iter = IntPrompt.ask("Enter max iterations", default=100)
+
+        return matrix, b, x0, tol, max_iter
+
+    @staticmethod
+    def _winner_label_and_style(left_label: str, right_label: str, left_value: float, right_value: float, *, lower_is_better: bool = True, same_tolerance: float = 1e-9):
+        """Return winner label and value styles for comparison rows."""
+        if abs(left_value - right_value) <= same_tolerance:
+            return "Same", "bold cyan", "bold cyan"
+
+        if lower_is_better:
+            if left_value < right_value:
+                return left_label, "bold green", "dim"
+            return right_label, "dim", "bold green"
+
+        if left_value > right_value:
+            return left_label, "bold green", "dim"
+        return right_label, "dim", "bold green"
+
+    def _print_linear_comparison_table(self, res_j: Any, res_gs: Any):
+        """Render a side-by-side Rich table comparing Jacobi and Gauss-Seidel."""
+        table = Table(title="Solver Comparison", box=box.ROUNDED, border_style="cyan")
+        table.add_column("Metric", style="bold cyan")
+        table.add_column("Jacobi", justify="center")
+        table.add_column("Gauss-Seidel", justify="center")
+        table.add_column("Winner", justify="center", style="bold green")
+
+        j_iterations = int(res_j.metadata.get("iterations", 0))
+        gs_iterations = int(res_gs.metadata.get("iterations", 0))
+        iter_winner, j_iter_style, gs_iter_style = self._winner_label_and_style(
+            "Jacobi",
+            "G-S",
+            j_iterations,
+            gs_iterations,
+            lower_is_better=True,
+            same_tolerance=0.0,
+        )
+
+        j_error = float(res_j.metadata.get("final_error", 0.0))
+        gs_error = float(res_gs.metadata.get("final_error", 0.0))
+        error_winner, j_err_style, gs_err_style = self._winner_label_and_style(
+            "Jacobi",
+            "G-S",
+            j_error,
+            gs_error,
+            lower_is_better=True,
+        )
+
+        j_converged = bool(res_j.metadata.get("converged", False))
+        gs_converged = bool(res_gs.metadata.get("converged", False))
+        if j_converged == gs_converged:
+            converged_winner = "Tie"
+            j_conv_style = gs_conv_style = "bold cyan"
+        elif j_converged:
+            converged_winner = "Jacobi"
+            j_conv_style, gs_conv_style = "bold green", "dim"
+        else:
+            converged_winner = "G-S"
+            j_conv_style, gs_conv_style = "dim", "bold green"
+
+        table.add_row(
+            "Iterations",
+            Text(str(j_iterations), style=j_iter_style),
+            Text(str(gs_iterations), style=gs_iter_style),
+            Text(iter_winner, style="bold green" if iter_winner != "Same" else "bold cyan"),
+        )
+        table.add_row(
+            "Final Error",
+            Text(f"{j_error:.4e}", style=j_err_style),
+            Text(f"{gs_error:.4e}", style=gs_err_style),
+            Text(error_winner, style="bold green" if error_winner != "Same" else "bold cyan"),
+        )
+        table.add_row(
+            "Converged",
+            Text("Yes" if j_converged else "No", style=j_conv_style),
+            Text("Yes" if gs_converged else "No", style=gs_conv_style),
+            Text("Tie" if converged_winner == "Tie" else converged_winner, style="bold green" if converged_winner != "Tie" else "bold cyan"),
+        )
+
+        j_solution = list(res_j.y_data)
+        gs_solution = list(res_gs.y_data)
+        max_len = max(len(j_solution), len(gs_solution))
+        for index in range(max_len):
+            j_value = j_solution[index] if index < len(j_solution) else None
+            gs_value = gs_solution[index] if index < len(gs_solution) else None
+
+            if j_value is None or gs_value is None:
+                winner = "N/A"
+                j_cell = Text("—", style="dim")
+                gs_cell = Text("—", style="dim")
+            elif abs(j_value - gs_value) <= 1e-9:
+                winner = "Same"
+                j_cell = Text(f"{j_value:.6f}", style="bold cyan")
+                gs_cell = Text(f"{gs_value:.6f}", style="bold cyan")
+            else:
+                winner = "Diff"
+                j_cell = Text(f"{j_value:.6f}", style="yellow")
+                gs_cell = Text(f"{gs_value:.6f}", style="yellow")
+
+            table.add_row(
+                f"Solution x{index + 1}",
+                j_cell,
+                gs_cell,
+                Text(winner, style="bold green" if winner == "Same" else "bold cyan" if winner == "N/A" else "yellow"),
+            )
+
+        self.console.print(table)
+
+    def _maybe_show_verbose_linear_steps(self, jacobi_steps: List[Any], gauss_seidel_steps: List[Any]):
+        """Optionally print both per-method step tables after a comparison."""
+        if Prompt.ask("Show step-by-step tables for both methods? (y/n)", choices=["y", "n"], default="n") != "y":
+            return
+
+        self.console.print()
+        self.console.print(Panel("[bold]Jacobi Steps[/bold]", border_style="cyan"))
+        self.formatter.display_linear_steps(jacobi_steps, method_name="Jacobi")
+        self.console.print()
+        self.console.print(Panel("[bold]Gauss-Seidel Steps[/bold]", border_style="cyan"))
+        self.formatter.display_linear_steps(gauss_seidel_steps, method_name="Gauss-Seidel")
+
+    def run_comparison(self):
+        """Run both Jacobi and Gauss-Seidel on the same input and compare."""
+        self.clear_screen()
+        self.display_header("Method Comparison", "Jacobi vs Gauss-Seidel")
+
+        matrix, b, x0, tol, max_iter = self._collect_linear_system_inputs(
+            example_matrix=[[4.0, -1.0, -1.0], [-1.0, 4.0, -1.0], [-1.0, -1.0, 4.0]],
+            example_b=[3.0, 2.0, 1.0],
+            example_x0=[0.0, 0.0, 0.0],
+            example_tol=1e-6,
+            example_max_iter=100,
+            example_lines=[
+                "Example: 3x3 System (Truss Analysis)",
+                "Matrix A: [[4.0, -1.0, -1.0], [-1.0, 4.0, -1.0], [-1.0, -1.0, 4.0]]",
+                "Vector b: [3.0, 2.0, 1.0]",
+            ],
+        )
 
         jacobi = JacobiSolver()
         gs = GaussSeidelSolver()
@@ -640,26 +816,16 @@ class NumericalCLI:
             res_j = jacobi.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
             res_gs = gs.solve(A=matrix, b=b, x0=x0, tol=tol, max_iter=max_iter)
 
-            table = Table(title="Solver Comparison", box=box.ROUNDED)
-            table.add_column("Metric", style="cyan")
-            table.add_column("Jacobi", justify="center")
-            table.add_column("Gauss-Seidel", justify="center")
-            table.add_column("Winner", justify="center", style="bold green")
+            self._warn_if_diverged(res_j)
+            self._warn_if_diverged(res_gs)
 
-            iter_winner = "Gauss-Seidel" if res_gs.metadata['iterations'] < res_j.metadata['iterations'] else "Jacobi"
-            if res_gs.metadata['iterations'] == res_j.metadata['iterations']: iter_winner = "Tie"
-
-            table.add_row("Iterations", str(res_j.metadata['iterations']), str(res_gs.metadata['iterations']), iter_winner)
-            table.add_row("Final Error", f"{res_j.metadata['final_error']:.4e}", f"{res_gs.metadata['final_error']:.4e}", "N/A")
-            table.add_row("Converged", str(res_j.metadata['converged']), str(res_gs.metadata['converged']), "N/A")
-            
-            self.console.print(table)
-            
-            self.console.print("\n[bold]Final Solutions:[/bold]")
+            self._print_linear_comparison_table(res_j, res_gs)
+            self.console.print()
+            self.console.print("[bold]Final Solutions:[/bold]")
             self.console.print(f"Jacobi: {res_j.y_data}")
             self.console.print(f"Gauss-Seidel: {res_gs.y_data}")
+            self._maybe_show_verbose_linear_steps(jacobi.get_steps(), gs.get_steps())
 
-            # Store Gauss-Seidel steps as primary for export comparison
             self.last_steps = gs.get_steps()
             self.ask_export(self.get_steps_from_result(), "Comparison")
 
@@ -744,6 +910,7 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_linear_steps(self.last_steps, method_name="Gauss-Seidel")
             self.console.print(Panel(
@@ -833,6 +1000,7 @@ class NumericalCLI:
                 tol=tol,
                 max_iter=max_iter
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_linear_steps(self.last_steps, method_name="Jacobi")
             self.console.print(Panel(
@@ -1023,6 +1191,7 @@ class NumericalCLI:
                 y_points=y_points,
                 target_x=target_x
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_interpolation_steps(self.last_steps)
             self.console.print(Panel(
@@ -1082,6 +1251,7 @@ class NumericalCLI:
                 y_points=y_points,
                 method=method
             )
+            self._warn_if_diverged(result)
             self.last_steps = solver.get_steps()
             self.formatter.display_integration_steps(self.last_steps)
             self.console.print(Panel(

@@ -85,7 +85,26 @@ def test_divergence_detection():
     result = solver.solve(expression="1.1 * x", initial_guess=1.0, max_iterations=20)
 
     assert result.metadata["diverged"] is True
-    assert len(result.x_data) >= 6
+    assert result.metadata["iterations"] < 20
+    assert len(result.x_data) == result.metadata["iterations"]
+
+
+def test_newton_raphson_divergence_breaks_early():
+    from unittest.mock import patch
+    from numcore_engine.parser import SymbolicParser
+
+    solver = NewtonRaphsonSolver()
+
+    with patch.object(SymbolicParser, "get_derivative", return_value="dummy"), patch.object(
+        SymbolicParser,
+        "parse_expression",
+        side_effect=[lambda x: -2 * x, lambda x: 1.0],
+    ):
+        result = solver.solve(expression="x", initial_guess=1.0, max_iterations=50)
+
+    assert result.metadata["diverged"] is True
+    assert result.metadata["iterations"] == 6
+    assert len(solver.get_steps()) == 6
 
 
 def test_bisection_invalid_interval():

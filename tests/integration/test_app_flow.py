@@ -69,6 +69,7 @@ def mock_ctk():
 from numcore_cli.terminal import NumericalCLI
 from numcore_gui.dashboard import Dashboard
 from numcore_engine.solvers import NewtonRaphsonSolver
+from types import SimpleNamespace
 
 def test_cli_menu_navigation():
     """Tests that the CLI menu correctly routes to different categories and exits."""
@@ -138,3 +139,13 @@ def test_end_to_end_numerical_flow_cli():
 
         with patch.object(cli.console, 'print'):
             cli.main_menu()
+
+
+def test_cli_divergence_warning_helper():
+    cli = NumericalCLI()
+    result = SimpleNamespace(metadata={"diverged": True})
+
+    with patch.object(cli.console, "print") as mock_print:
+        cli._warn_if_diverged(result)
+
+    mock_print.assert_called_once()

@@ -1,0 +1,306 @@
+{
+  "nodes": [
+    {
+      "id": "file:.specify/extensions/git/scripts/powershell/initialize-repo.ps1",
+      "type": "file",
+      "name": "initialize-repo.ps1",
+      "filePath": ".specify/extensions/git/scripts/powershell/initialize-repo.ps1",
+      "summary": "PowerShell script for initializing Git repository",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell",
+        "git"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/claude.manifest.json",
+      "type": "config",
+      "name": "claude.manifest.json",
+      "filePath": ".specify/integrations/claude.manifest.json",
+      "summary": "Claude integration manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/gemini.manifest.json",
+      "type": "config",
+      "name": "gemini.manifest.json",
+      "filePath": ".specify/integrations/gemini.manifest.json",
+      "summary": "Gemini integration manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/speckit.manifest.json",
+      "type": "config",
+      "name": "speckit.manifest.json",
+      "filePath": ".specify/integrations/speckit.manifest.json",
+      "summary": "Spec-Kit core manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "document:.specify/memory/constitution.md",
+      "type": "document",
+      "name": "constitution.md",
+      "filePath": ".specify/memory/constitution.md",
+      "summary": "Project constitution defining core principles and rules",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "governance"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/check-prerequisites.ps1",
+      "type": "file",
+      "name": "check-prerequisites.ps1",
+      "filePath": ".specify/scripts/powershell/check-prerequisites.ps1",
+      "summary": "Check environment prerequisites",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell",
+        "setup"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/common.ps1",
+      "type": "file",
+      "name": "common.ps1",
+      "filePath": ".specify/scripts/powershell/common.ps1",
+      "summary": "Common PowerShell helper functions",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/create-new-feature.ps1",
+      "type": "file",
+      "name": "create-new-feature.ps1",
+      "filePath": ".specify/scripts/powershell/create-new-feature.ps1",
+      "summary": "Script to create new feature branches/specs",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/setup-plan.ps1",
+      "type": "file",
+      "name": "setup-plan.ps1",
+      "filePath": ".specify/scripts/powershell/setup-plan.ps1",
+      "summary": "Setup implementation plan",
+      "complexity": "simple",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/checklist-template.md",
+      "type": "document",
+      "name": "checklist-template.md",
+      "filePath": ".specify/templates/checklist-template.md",
+      "summary": "Template for project checklists",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/constitution-template.md",
+      "type": "document",
+      "name": "constitution-template.md",
+      "filePath": ".specify/templates/constitution-template.md",
+      "summary": "Template for project constitutions",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/plan-template.md",
+      "type": "document",
+      "name": "plan-template.md",
+      "filePath": ".specify/templates/plan-template.md",
+      "summary": "Template for implementation plans",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/spec-template.md",
+      "type": "document",
+      "name": "spec-template.md",
+      "filePath": ".specify/templates/spec-template.md",
+      "summary": "Template for technical specifications",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/tasks-template.md",
+      "type": "document",
+      "name": "tasks-template.md",
+      "filePath": ".specify/templates/tasks-template.md",
+      "summary": "Template for task breakdown",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/workflows/workflow-registry.json",
+      "type": "config",
+      "name": "workflow-registry.json",
+      "filePath": ".specify/workflows/workflow-registry.json",
+      "summary": "Spec-Kit workflow registry",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/workflows/speckit/workflow.yml",
+      "type": "config",
+      "name": "workflow.yml",
+      "filePath": ".specify/workflows/speckit/workflow.yml",
+      "summary": "Spec-Kit core workflow definition",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Ignore patterns for architecture analysis",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "understand"
+      ]
+    },
+    {
+      "id": "document:docs/ARCHITECTURE.md",
+      "type": "document",
+      "name": "ARCHITECTURE.md",
+      "filePath": "docs/ARCHITECTURE.md",
+      "summary": "High-level architecture documentation",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "architecture"
+      ]
+    },
+    {
+      "id": "document:docs/ARCHITECTURE_DEEP.md",
+      "type": "document",
+      "name": "ARCHITECTURE_DEEP.md",
+      "filePath": "docs/ARCHITECTURE_DEEP.md",
+      "summary": "Deep-dive architecture reference",
+      "complexity": "complex",
+      "tags": [
+        "docs",
+        "architecture"
+      ]
+    },
+    {
+      "id": "document:docs/DESIGN_DOCUMENT.md",
+      "type": "document",
+      "name": "DESIGN_DOCUMENT.md",
+      "filePath": "docs/DESIGN_DOCUMENT.md",
+      "summary": "Project design document",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "design"
+      ]
+    },
+    {
+      "id": "document:docs/ENGINE_MODULES.md",
+      "type": "document",
+      "name": "ENGINE_MODULES.md",
+      "filePath": "docs/ENGINE_MODULES.md",
+      "summary": "Guide to numerical engine modules",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "engine"
+      ]
+    },
+    {
+      "id": "document:docs/GUI_GUIDE.md",
+      "type": "document",
+      "name": "GUI_GUIDE.md",
+      "filePath": "docs/GUI_GUIDE.md",
+      "summary": "Guide to GUI structure and components",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "gui"
+      ]
+    },
+    {
+      "id": "document:docs/GUI_INPUT_FLOW.md",
+      "type": "document",
+      "name": "GUI_INPUT_FLOW.md",
+      "filePath": "docs/GUI_INPUT_FLOW.md",
+      "summary": "Traces user input from UI to engine",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "gui"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:docs/ARCHITECTURE_DEEP.md",
+      "target": "document:docs/ARCHITECTURE.md",
+      "type": "related",
+      "weight": 0.5
+    },
+    {
+      "source": "document:.specify/memory/constitution.md",
+      "target": "document:.specify/templates/constitution-template.md",
+      "type": "similar_to",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.specify/workflows/speckit/workflow.yml",
+      "target": "config:.specify/workflows/workflow-registry.json",
+      "type": "configures",
+      "weight": 0.6
+    }
+  ]
+}

@@ -3,7 +3,7 @@ from typing import List
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData, NumericalStep
 from numcore_gui.help_system import HelpProvider
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 from numcore_engine.solvers.network_solver import GaussSeidelSolver, JacobiSolver
 from numcore_engine.solvers.comparison import ComparisonRunner
 from numcore_gui.smart_solver_panel import SmartSolverPanel
@@ -12,14 +12,14 @@ from numcore_gui.result_panel import ResultPanel
 
 class NetworkSolverPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 2: Linear Systems", font=ctk.CTkFont(size=18, weight="bold"))
@@ -60,7 +60,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.load_example_optionmenu.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
 
         # Frame for dynamic matrix and vector entries
-        self.matrix_input_frame = ctk.CTkScrollableFrame(self.input_frame, label_text="Coefficient Matrix (A) and Constant Vector (b)", fg_color=BLACK)
+        self.matrix_input_frame = ctk.CTkScrollableFrame(self.input_frame, label_text="Coefficient Matrix (A) and Constant Vector (b)", fg_color=theme.get_bg_color())
         self.matrix_input_frame.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="nsew")
         self.input_frame.grid_rowconfigure(7, weight=1) # Allow matrix input frame to expand
 
@@ -97,7 +97,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.error_label.grid(row=14, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
         self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
@@ -112,7 +112,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.viz_label = ctk.CTkLabel(self.plot_container, text="Matrix Heatmap / Convergence", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.grid(row=0, column=0, padx=20, pady=(10,0), sticky="n")
 
-        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=theme.get_bg_color(), corner_radius=5)
         self.plot_placeholder.grid(row=1, column=0, padx=20, pady=(0, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
@@ -127,6 +127,19 @@ class NetworkSolverPage(ctk.CTkFrame):
             "Gauss-Seidel": GaussSeidelSolver(),
             "Jacobi": JacobiSolver()
         }
+
+    def update_theme(self):
+        """Update all widget colors when theme changes."""
+        self.configure(fg_color=theme.get_bg_color())
+        self.input_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.matrix_input_frame.configure(fg_color=theme.get_bg_color())
+        self.viz_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.plot_container.configure(fg_color="transparent")
+        self.plot_placeholder.configure(fg_color=theme.get_bg_color())
+        # Refresh the plot manager's theme
+        if hasattr(self, 'plot_manager') and self.plot_manager:
+            self.plot_manager._apply_dark_theme()
+            self.plot_manager.canvas.draw()
 
     _EXAMPLE_PROBLEMS = {
         "(a) 3x3": {
@@ -305,6 +318,17 @@ class NetworkSolverPage(ctk.CTkFrame):
             kwargs = {"A": A, "b": b, "tol": tol}
             
             comparison_result = runner.run_comparison(**kwargs)
+            
+            # Gather steps from each solver for comparison visualization
+            steps_dict = {}
+            for solver_name, solver in self.solvers.items():
+                steps = solver.get_steps()
+                if steps:
+                    steps_dict[solver_name] = steps
+            
+            # Create comparison visualization if we have steps from multiple solvers
+            if len(steps_dict) > 1:
+                self.plot_manager.plot_comparison(steps_dict, "Method Comparison (Error vs Iteration)", tol)
             
             # Show SmartSolverPanel
             SmartSolverPanel(self, comparison_result)

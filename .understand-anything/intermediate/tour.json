@@ -1,0 +1,62 @@
+[
+  {
+    "order": 1,
+    "title": "Welcome to NUM-CORE",
+    "description": "Start by reading the README.md to understand the project's purpose: a core engine for numerical methods with both GUI and CLI interfaces.",
+    "nodeIds": [
+      "document:README.md"
+    ]
+  },
+  {
+    "order": 2,
+    "title": "Application Entry Point",
+    "description": "The main entry point for the Python application is main.py. It initializes the environment and launches either the GUI dashboard or the Terminal interface.",
+    "nodeIds": [
+      "file:main.py"
+    ]
+  },
+  {
+    "order": 3,
+    "title": "Core Numerical Engine",
+    "description": "The numerical engine contains specialized solvers for root finding, regression, and calculus. These are found in the numcore_engine/solvers directory.",
+    "nodeIds": [
+      "file:numcore_engine/solvers/root_finder.py",
+      "file:numcore_engine/solvers/regression_solvers.py",
+      "file:numcore_engine/solvers/__init__.py"
+    ]
+  },
+  {
+    "order": 4,
+    "title": "GUI Dashboard",
+    "description": "The graphical interface is built with PyQt/PySide. The dashboard.py file manages the main layout and navigation between different numerical method pages.",
+    "nodeIds": [
+      "file:numcore_gui/dashboard.py"
+    ]
+  },
+  {
+    "order": 5,
+    "title": "Visualization and Plotting",
+    "description": "Visualization is key for numerical methods. The visualization.py module handles dynamic Matplotlib plots and animations for root finding and interpolation.",
+    "nodeIds": [
+      "file:numcore_gui/visualization.py"
+    ]
+  },
+  {
+    "order": 6,
+    "title": "MATLAB Edition",
+    "description": "For users preferring MATLAB, a complete implementation is available in the matlab/ directory, featuring its own menu-driven UI and equivalent solver implementations.",
+    "nodeIds": [
+      "file:matlab/main.m",
+      "file:matlab/root_finding_menu.m"
+    ]
+  },
+  {
+    "order": 7,
+    "title": "Verification and Testing",
+    "description": "The project includes an extensive test suite. integration/test_app_flow.py verifies the complete application lifecycle across both CLI and GUI paths.",
+    "nodeIds": [
+      "file:tests/integration/test_app_flow.py",
+      "file:tests/unit/test_root_finder.py"
+    ]
+  }
+]

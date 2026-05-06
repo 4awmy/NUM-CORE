@@ -1,0 +1,1740 @@
+{
+  "nodes": [
+    {
+      "id": "file:.coverage",
+      "type": "file",
+      "name": ".coverage",
+      "filePath": ".coverage",
+      "summary": "Coverage data file (SQLite)",
+      "complexity": "simple",
+      "tags": [
+        "metadata",
+        "internal"
+      ]
+    },
+    {
+      "id": "file:.gitignore",
+      "type": "file",
+      "name": ".gitignore",
+      "filePath": ".gitignore",
+      "summary": "Git ignore patterns",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "git"
+      ]
+    },
+    {
+      "id": "document:CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "CLAUDE.md",
+      "summary": "Development guide (build/test/style)",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "development"
+      ]
+    },
+    {
+      "id": "document:docs - Copy (2).zip",
+      "type": "document",
+      "name": "docs - Copy (2).zip",
+      "filePath": "docs - Copy (2).zip",
+      "summary": "Documentation archive backup",
+      "complexity": "simple",
+      "tags": [
+        "archive",
+        "backup"
+      ]
+    },
+    {
+      "id": "document:docs - Copy (3).zip",
+      "type": "document",
+      "name": "docs - Copy (3).zip",
+      "filePath": "docs - Copy (3).zip",
+      "summary": "Documentation archive backup",
+      "complexity": "simple",
+      "tags": [
+        "archive",
+        "backup"
+      ]
+    },
+    {
+      "id": "document:docs - Copy.zip",
+      "type": "document",
+      "name": "docs - Copy.zip",
+      "filePath": "docs - Copy.zip",
+      "summary": "Documentation archive backup",
+      "complexity": "simple",
+      "tags": [
+        "archive",
+        "backup"
+      ]
+    },
+    {
+      "id": "document:docs.zip",
+      "type": "document",
+      "name": "docs.zip",
+      "filePath": "docs.zip",
+      "summary": "Project documentation archive",
+      "complexity": "simple",
+      "tags": [
+        "archive",
+        "docs"
+      ]
+    },
+    {
+      "id": "document:GEMINI.md",
+      "type": "document",
+      "name": "GEMINI.md",
+      "filePath": "GEMINI.md",
+      "summary": "Context and task tracking for Gemini CLI",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "tracking"
+      ]
+    },
+    {
+      "id": "file:gemini_final_finish.log",
+      "type": "file",
+      "name": "gemini_final_finish.log",
+      "filePath": "gemini_final_finish.log",
+      "summary": "Execution log for final phase",
+      "complexity": "simple",
+      "tags": [
+        "log"
+      ]
+    },
+    {
+      "id": "file:gemini_phases_bgh_output.log",
+      "type": "file",
+      "name": "gemini_phases_bgh_output.log",
+      "filePath": "gemini_phases_bgh_output.log",
+      "summary": "Execution log for phases B, G, H",
+      "complexity": "simple",
+      "tags": [
+        "log"
+      ]
+    },
+    {
+      "id": "file:gemini_phase_a_output.log",
+      "type": "file",
+      "name": "gemini_phase_a_output.log",
+      "filePath": "gemini_phase_a_output.log",
+      "summary": "Execution log for phase A",
+      "complexity": "simple",
+      "tags": [
+        "log"
+      ]
+    },
+    {
+      "id": "document:issue1.md",
+      "type": "document",
+      "name": "issue1.md",
+      "filePath": "issue1.md",
+      "summary": "Issue description: Core interface validation",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue2.md",
+      "type": "document",
+      "name": "issue2.md",
+      "filePath": "issue2.md",
+      "summary": "Issue description: CLI formatting",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue3.md",
+      "type": "document",
+      "name": "issue3.md",
+      "filePath": "issue3.md",
+      "summary": "Issue description: Root finding stability",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue4.md",
+      "type": "document",
+      "name": "issue4.md",
+      "filePath": "issue4.md",
+      "summary": "Issue description: Integration precision",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue5.md",
+      "type": "document",
+      "name": "issue5.md",
+      "filePath": "issue5.md",
+      "summary": "Issue description: Interpolation edge cases",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue6.md",
+      "type": "document",
+      "name": "issue6.md",
+      "filePath": "issue6.md",
+      "summary": "Issue description: GUI layout consistency",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:issue7.md",
+      "type": "document",
+      "name": "issue7.md",
+      "filePath": "issue7.md",
+      "summary": "Issue description: Documentation updates",
+      "complexity": "simple",
+      "tags": [
+        "issue"
+      ]
+    },
+    {
+      "id": "document:ISSUES.md",
+      "type": "document",
+      "name": "ISSUES.md",
+      "filePath": "ISSUES.md",
+      "summary": "Consolidated issues report",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "issues"
+      ]
+    },
+    {
+      "id": "file:main.py",
+      "type": "file",
+      "name": "main.py",
+      "filePath": "main.py",
+      "summary": "Application entry point, launches GUI or TUI",
+      "complexity": "moderate",
+      "tags": [
+        "entrypoint",
+        "launch"
+      ]
+    },
+    {
+      "id": "document:Numerical Project Requirements.pdf",
+      "type": "document",
+      "name": "Numerical Project Requirements.pdf",
+      "filePath": "Numerical Project Requirements.pdf",
+      "summary": "Original project assignment specifications",
+      "complexity": "simple",
+      "tags": [
+        "specs",
+        "docs"
+      ]
+    },
+    {
+      "id": "document:numerical_methods_problems.md",
+      "type": "document",
+      "name": "numerical_methods_problems.md",
+      "filePath": "numerical_methods_problems.md",
+      "summary": "Problem set for testing numerical methods",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "testing"
+      ]
+    },
+    {
+      "id": "document:PROJECT_PLAN.md",
+      "type": "document",
+      "name": "PROJECT_PLAN.md",
+      "filePath": "PROJECT_PLAN.md",
+      "summary": "High-level implementation and completion plan",
+      "complexity": "simple",
+      "tags": [
+        "plan",
+        "docs"
+      ]
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Main project documentation and architecture overview",
+      "complexity": "simple",
+      "tags": [
+        "docs"
+      ]
+    },
+    {
+      "id": "config:requirements.txt",
+      "type": "config",
+      "name": "requirements.txt",
+      "filePath": "requirements.txt",
+      "summary": "Python project dependencies",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "python"
+      ]
+    },
+    {
+      "id": "config:.specify/extensions.yml",
+      "type": "config",
+      "name": "extensions.yml",
+      "filePath": ".specify/extensions.yml",
+      "summary": "Spec-Kit extension configuration and hooks",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/feature.json",
+      "type": "config",
+      "name": "feature.json",
+      "filePath": ".specify/feature.json",
+      "summary": "Spec-Kit feature configuration",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/init-options.json",
+      "type": "config",
+      "name": "init-options.json",
+      "filePath": ".specify/init-options.json",
+      "summary": "Spec-Kit initialization options",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/integration.json",
+      "type": "config",
+      "name": "integration.json",
+      "filePath": ".specify/integration.json",
+      "summary": "Spec-Kit integration settings",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/.registry",
+      "type": "file",
+      "name": ".registry",
+      "filePath": ".specify/extensions/.registry",
+      "summary": "Spec-Kit extension registry",
+      "complexity": "simple",
+      "tags": [
+        "speckit",
+        "internal"
+      ]
+    },
+    {
+      "id": "config:.specify/extensions/git/config-template.yml",
+      "type": "config",
+      "name": "config-template.yml",
+      "filePath": ".specify/extensions/git/config-template.yml",
+      "summary": "Git extension config template",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "git"
+      ]
+    },
+    {
+      "id": "config:.specify/extensions/git/extension.yml",
+      "type": "config",
+      "name": "extension.yml",
+      "filePath": ".specify/extensions/git/extension.yml",
+      "summary": "Git extension definition",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "git"
+      ]
+    },
+    {
+      "id": "config:.specify/extensions/git/git-config.yml",
+      "type": "config",
+      "name": "git-config.yml",
+      "filePath": ".specify/extensions/git/git-config.yml",
+      "summary": "Git extension runtime config",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": ".specify/extensions/git/README.md",
+      "summary": "Git extension documentation",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/commands/speckit.git.commit.md",
+      "type": "document",
+      "name": "speckit.git.commit.md",
+      "filePath": ".specify/extensions/git/commands/speckit.git.commit.md",
+      "summary": "Git commit command spec",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/commands/speckit.git.feature.md",
+      "type": "document",
+      "name": "speckit.git.feature.md",
+      "filePath": ".specify/extensions/git/commands/speckit.git.feature.md",
+      "summary": "Git feature command spec",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/commands/speckit.git.initialize.md",
+      "type": "document",
+      "name": "speckit.git.initialize.md",
+      "filePath": ".specify/extensions/git/commands/speckit.git.initialize.md",
+      "summary": "Git initialize command spec",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/commands/speckit.git.remote.md",
+      "type": "document",
+      "name": "speckit.git.remote.md",
+      "filePath": ".specify/extensions/git/commands/speckit.git.remote.md",
+      "summary": "Git remote command spec",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "document:.specify/extensions/git/commands/speckit.git.validate.md",
+      "type": "document",
+      "name": "speckit.git.validate.md",
+      "filePath": ".specify/extensions/git/commands/speckit.git.validate.md",
+      "summary": "Git validate command spec",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/bash/auto-commit.sh",
+      "type": "file",
+      "name": "auto-commit.sh",
+      "filePath": ".specify/extensions/git/scripts/bash/auto-commit.sh",
+      "summary": "Bash script for auto-committing changes",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "bash",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/bash/create-new-feature.sh",
+      "type": "file",
+      "name": "create-new-feature.sh",
+      "filePath": ".specify/extensions/git/scripts/bash/create-new-feature.sh",
+      "summary": "Bash script for creating feature branches",
+      "complexity": "complex",
+      "tags": [
+        "script",
+        "bash",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/bash/git-common.sh",
+      "type": "file",
+      "name": "git-common.sh",
+      "filePath": ".specify/extensions/git/scripts/bash/git-common.sh",
+      "summary": "Common Bash utilities for Git",
+      "complexity": "simple",
+      "tags": [
+        "script",
+        "bash",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/bash/initialize-repo.sh",
+      "type": "file",
+      "name": "initialize-repo.sh",
+      "filePath": ".specify/extensions/git/scripts/bash/initialize-repo.sh",
+      "summary": "Bash script for initializing Git repository",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "bash",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/powershell/auto-commit.ps1",
+      "type": "file",
+      "name": "auto-commit.ps1",
+      "filePath": ".specify/extensions/git/scripts/powershell/auto-commit.ps1",
+      "summary": "PowerShell script for auto-committing changes",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/powershell/create-new-feature.ps1",
+      "type": "file",
+      "name": "create-new-feature.ps1",
+      "filePath": ".specify/extensions/git/scripts/powershell/create-new-feature.ps1",
+      "summary": "PowerShell script for creating feature branches",
+      "complexity": "complex",
+      "tags": [
+        "script",
+        "powershell",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/powershell/git-common.ps1",
+      "type": "file",
+      "name": "git-common.ps1",
+      "filePath": ".specify/extensions/git/scripts/powershell/git-common.ps1",
+      "summary": "Common PowerShell utilities for Git",
+      "complexity": "simple",
+      "tags": [
+        "script",
+        "powershell",
+        "git"
+      ]
+    },
+    {
+      "id": "file:.specify/extensions/git/scripts/powershell/initialize-repo.ps1",
+      "type": "file",
+      "name": "initialize-repo.ps1",
+      "filePath": ".specify/extensions/git/scripts/powershell/initialize-repo.ps1",
+      "summary": "PowerShell script for initializing Git repository",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell",
+        "git"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/claude.manifest.json",
+      "type": "config",
+      "name": "claude.manifest.json",
+      "filePath": ".specify/integrations/claude.manifest.json",
+      "summary": "Claude integration manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/gemini.manifest.json",
+      "type": "config",
+      "name": "gemini.manifest.json",
+      "filePath": ".specify/integrations/gemini.manifest.json",
+      "summary": "Gemini integration manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "config:.specify/integrations/speckit.manifest.json",
+      "type": "config",
+      "name": "speckit.manifest.json",
+      "filePath": ".specify/integrations/speckit.manifest.json",
+      "summary": "Spec-Kit core manifest",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit",
+        "integration"
+      ]
+    },
+    {
+      "id": "document:.specify/memory/constitution.md",
+      "type": "document",
+      "name": "constitution.md",
+      "filePath": ".specify/memory/constitution.md",
+      "summary": "Project constitution defining core principles and rules",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "governance"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/check-prerequisites.ps1",
+      "type": "file",
+      "name": "check-prerequisites.ps1",
+      "filePath": ".specify/scripts/powershell/check-prerequisites.ps1",
+      "summary": "Check environment prerequisites",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell",
+        "setup"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/common.ps1",
+      "type": "file",
+      "name": "common.ps1",
+      "filePath": ".specify/scripts/powershell/common.ps1",
+      "summary": "Common PowerShell helper functions",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/create-new-feature.ps1",
+      "type": "file",
+      "name": "create-new-feature.ps1",
+      "filePath": ".specify/scripts/powershell/create-new-feature.ps1",
+      "summary": "Script to create new feature branches/specs",
+      "complexity": "moderate",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:.specify/scripts/powershell/setup-plan.ps1",
+      "type": "file",
+      "name": "setup-plan.ps1",
+      "filePath": ".specify/scripts/powershell/setup-plan.ps1",
+      "summary": "Setup implementation plan",
+      "complexity": "simple",
+      "tags": [
+        "script",
+        "powershell"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/checklist-template.md",
+      "type": "document",
+      "name": "checklist-template.md",
+      "filePath": ".specify/templates/checklist-template.md",
+      "summary": "Template for project checklists",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/constitution-template.md",
+      "type": "document",
+      "name": "constitution-template.md",
+      "filePath": ".specify/templates/constitution-template.md",
+      "summary": "Template for project constitutions",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/plan-template.md",
+      "type": "document",
+      "name": "plan-template.md",
+      "filePath": ".specify/templates/plan-template.md",
+      "summary": "Template for implementation plans",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/spec-template.md",
+      "type": "document",
+      "name": "spec-template.md",
+      "filePath": ".specify/templates/spec-template.md",
+      "summary": "Template for technical specifications",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:.specify/templates/tasks-template.md",
+      "type": "document",
+      "name": "tasks-template.md",
+      "filePath": ".specify/templates/tasks-template.md",
+      "summary": "Template for task breakdown",
+      "complexity": "simple",
+      "tags": [
+        "template",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/workflows/workflow-registry.json",
+      "type": "config",
+      "name": "workflow-registry.json",
+      "filePath": ".specify/workflows/workflow-registry.json",
+      "summary": "Spec-Kit workflow registry",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "config:.specify/workflows/speckit/workflow.yml",
+      "type": "config",
+      "name": "workflow.yml",
+      "filePath": ".specify/workflows/speckit/workflow.yml",
+      "summary": "Spec-Kit core workflow definition",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "speckit"
+      ]
+    },
+    {
+      "id": "file:.understand-anything/.understandignore",
+      "type": "file",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Ignore patterns for architecture analysis",
+      "complexity": "simple",
+      "tags": [
+        "config",
+        "understand"
+      ]
+    },
+    {
+      "id": "document:docs/ARCHITECTURE.md",
+      "type": "document",
+      "name": "ARCHITECTURE.md",
+      "filePath": "docs/ARCHITECTURE.md",
+      "summary": "High-level architecture documentation",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "architecture"
+      ]
+    },
+    {
+      "id": "document:docs/ARCHITECTURE_DEEP.md",
+      "type": "document",
+      "name": "ARCHITECTURE_DEEP.md",
+      "filePath": "docs/ARCHITECTURE_DEEP.md",
+      "summary": "Deep-dive architecture reference",
+      "complexity": "complex",
+      "tags": [
+        "docs",
+        "architecture"
+      ]
+    },
+    {
+      "id": "document:docs/DESIGN_DOCUMENT.md",
+      "type": "document",
+      "name": "DESIGN_DOCUMENT.md",
+      "filePath": "docs/DESIGN_DOCUMENT.md",
+      "summary": "Project design document",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "design"
+      ]
+    },
+    {
+      "id": "document:docs/ENGINE_MODULES.md",
+      "type": "document",
+      "name": "ENGINE_MODULES.md",
+      "filePath": "docs/ENGINE_MODULES.md",
+      "summary": "Guide to numerical engine modules",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "engine"
+      ]
+    },
+    {
+      "id": "document:docs/GUI_GUIDE.md",
+      "type": "document",
+      "name": "GUI_GUIDE.md",
+      "filePath": "docs/GUI_GUIDE.md",
+      "summary": "Guide to GUI structure and components",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "gui"
+      ]
+    },
+    {
+      "id": "document:docs/GUI_INPUT_FLOW.md",
+      "type": "document",
+      "name": "GUI_INPUT_FLOW.md",
+      "filePath": "docs/GUI_INPUT_FLOW.md",
+      "summary": "Traces user input from UI to engine",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "gui"
+      ]
+    },
+    {
+      "id": "document:docs/SOLVERS_MATH.md",
+      "type": "document",
+      "name": "SOLVERS_MATH.md",
+      "filePath": "docs/SOLVERS_MATH.md",
+      "summary": "Mathematical reference for all numerical solvers",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "math"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/plans/2026-04-13-num-core-impl-plan.md",
+      "type": "document",
+      "name": "2026-04-13-num-core-impl-plan.md",
+      "filePath": "docs/maestro/plans/2026-04-13-num-core-impl-plan.md",
+      "summary": "Project implementation plan (Phase 1-9)",
+      "complexity": "moderate",
+      "tags": [
+        "plan",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/gui-refactor-parallel.md",
+      "type": "document",
+      "name": "gui-refactor-parallel.md",
+      "filePath": "docs/maestro/state/archive/gui-refactor-parallel.md",
+      "summary": "Archived orchestration log for GUI refactor",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/num-core-completion-wave-1.md",
+      "type": "document",
+      "name": "num-core-completion-wave-1.md",
+      "filePath": "docs/maestro/state/archive/num-core-completion-wave-1.md",
+      "summary": "Archived orchestration log for completion wave 1",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/num-core-phase-a-solvers.md",
+      "type": "document",
+      "name": "num-core-phase-a-solvers.md",
+      "filePath": "docs/maestro/state/archive/num-core-phase-a-solvers.md",
+      "summary": "Archived orchestration log for phase A solvers",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/screenshots/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docs/screenshots/README.md",
+      "summary": "Placeholder for screenshots documentation",
+      "complexity": "simple",
+      "tags": [
+        "docs"
+      ]
+    },
+    {
+      "id": "file:matlab/ask_yes_no.m",
+      "type": "file",
+      "name": "ask_yes_no.m",
+      "filePath": "matlab/ask_yes_no.m",
+      "summary": "MATLAB utility for yes/no prompts",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "util"
+      ]
+    },
+    {
+      "id": "file:matlab/calculus_menu.m",
+      "type": "file",
+      "name": "calculus_menu.m",
+      "filePath": "matlab/calculus_menu.m",
+      "summary": "MATLAB menu for calculus operations",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/gauss_seidel_solve.m",
+      "type": "file",
+      "name": "gauss_seidel_solve.m",
+      "filePath": "matlab/gauss_seidel_solve.m",
+      "summary": "MATLAB implementation of Gauss-Seidel solver",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/get_int_choice.m",
+      "type": "file",
+      "name": "get_int_choice.m",
+      "filePath": "matlab/get_int_choice.m",
+      "summary": "MATLAB utility for integer input selection",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "util"
+      ]
+    },
+    {
+      "id": "file:matlab/linear_systems_menu.m",
+      "type": "file",
+      "name": "linear_systems_menu.m",
+      "filePath": "matlab/linear_systems_menu.m",
+      "summary": "MATLAB menu for linear systems solvers",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/main.m",
+      "type": "file",
+      "name": "main.m",
+      "filePath": "matlab/main.m",
+      "summary": "Main entry point for MATLAB edition",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "entrypoint"
+      ]
+    },
+    {
+      "id": "file:matlab/ndd_interpolation.m",
+      "type": "file",
+      "name": "ndd_interpolation.m",
+      "filePath": "matlab/ndd_interpolation.m",
+      "summary": "MATLAB Newton's Divided Difference implementation",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/newton_raphson_solve.m",
+      "type": "file",
+      "name": "newton_raphson_solve.m",
+      "filePath": "matlab/newton_raphson_solve.m",
+      "summary": "MATLAB Newton-Raphson solver implementation",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/numerical_integration.m",
+      "type": "file",
+      "name": "numerical_integration.m",
+      "filePath": "matlab/numerical_integration.m",
+      "summary": "MATLAB numerical integration (Trapezoidal/Simpson)",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/print_header.m",
+      "type": "file",
+      "name": "print_header.m",
+      "filePath": "matlab/print_header.m",
+      "summary": "MATLAB UI utility for headers",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/print_menu.m",
+      "type": "file",
+      "name": "print_menu.m",
+      "filePath": "matlab/print_menu.m",
+      "summary": "MATLAB UI utility for menus",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/print_result.m",
+      "type": "file",
+      "name": "print_result.m",
+      "filePath": "matlab/print_result.m",
+      "summary": "MATLAB UI utility for result banners",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/root_finding_menu.m",
+      "type": "file",
+      "name": "root_finding_menu.m",
+      "filePath": "matlab/root_finding_menu.m",
+      "summary": "MATLAB menu for root finding methods",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_gauss_seidel.m",
+      "type": "file",
+      "name": "run_gauss_seidel.m",
+      "filePath": "matlab/run_gauss_seidel.m",
+      "summary": "MATLAB interactive runner for Gauss-Seidel",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_integration.m",
+      "type": "file",
+      "name": "run_integration.m",
+      "filePath": "matlab/run_integration.m",
+      "summary": "MATLAB interactive runner for numerical integration",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_interpolation.m",
+      "type": "file",
+      "name": "run_interpolation.m",
+      "filePath": "matlab/run_interpolation.m",
+      "summary": "MATLAB interactive runner for interpolation",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_newton_raphson.m",
+      "type": "file",
+      "name": "run_newton_raphson.m",
+      "filePath": "matlab/run_newton_raphson.m",
+      "summary": "MATLAB interactive runner for Newton-Raphson",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_simple_iteration.m",
+      "type": "file",
+      "name": "run_simple_iteration.m",
+      "filePath": "matlab/run_simple_iteration.m",
+      "summary": "MATLAB interactive runner for simple iteration",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/simple_iteration_solve.m",
+      "type": "file",
+      "name": "simple_iteration_solve.m",
+      "filePath": "matlab/simple_iteration_solve.m",
+      "summary": "MATLAB implementation of simple iteration solver",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:numcore_engine/solvers/regression_solvers.py",
+      "type": "file",
+      "name": "regression_solvers.py",
+      "filePath": "numcore_engine/solvers/regression_solvers.py",
+      "summary": "Implementations of curve fitting and regression models",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "engine",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:numcore_engine/solvers/root_finder.py",
+      "type": "file",
+      "name": "root_finder.py",
+      "filePath": "numcore_engine/solvers/root_finder.py",
+      "summary": "Implementations of root-finding algorithms (Bisection, Newton-Raphson, etc.)",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "engine",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:numcore_engine/solvers/__init__.py",
+      "type": "file",
+      "name": "__init__.py",
+      "filePath": "numcore_engine/solvers/__init__.py",
+      "summary": "Package initializer for engine solvers",
+      "complexity": "simple",
+      "tags": [
+        "python",
+        "engine"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/dashboard.py",
+      "type": "file",
+      "name": "dashboard.py",
+      "filePath": "numcore_gui/dashboard.py",
+      "summary": "Main GUI dashboard controller and layout",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "gui",
+        "controller"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/equation_input.py",
+      "type": "file",
+      "name": "equation_input.py",
+      "filePath": "numcore_gui/equation_input.py",
+      "summary": "Specialized widget for mathematical equation entry",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "gui",
+        "widget"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/help_system.py",
+      "type": "file",
+      "name": "help_system.py",
+      "filePath": "numcore_gui/help_system.py",
+      "summary": "Manages in-app help and info popups",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "gui",
+        "util"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/result_panel.py",
+      "type": "file",
+      "name": "result_panel.py",
+      "filePath": "numcore_gui/result_panel.py",
+      "summary": "GUI component for displaying numerical results in tables",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "gui",
+        "widget"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/smart_solver_panel.py",
+      "type": "file",
+      "name": "smart_solver_panel.py",
+      "filePath": "numcore_gui/smart_solver_panel.py",
+      "summary": "GUI panel for smart solver recommendations and performance comparison",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "gui",
+        "widget"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/theme.py",
+      "type": "file",
+      "name": "theme.py",
+      "filePath": "numcore_gui/theme.py",
+      "summary": "Central theme configuration for the application",
+      "complexity": "simple",
+      "tags": [
+        "python",
+        "gui",
+        "config"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/visualization.py",
+      "type": "file",
+      "name": "visualization.py",
+      "filePath": "numcore_gui/visualization.py",
+      "summary": "Handles Matplotlib integration and dynamic animations in the GUI",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "gui",
+        "viz"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/plan.md",
+      "type": "document",
+      "name": "plan.md",
+      "filePath": "specs/001-num-core-completion/plan.md",
+      "summary": "Implementation plan for the complete numerical engineering suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "plan"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/quickstart.md",
+      "type": "document",
+      "name": "quickstart.md",
+      "filePath": "specs/001-num-core-completion/quickstart.md",
+      "summary": "Developer quickstart guide for the completion feature",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/research.md",
+      "type": "document",
+      "name": "research.md",
+      "filePath": "specs/001-num-core-completion/research.md",
+      "summary": "Research findings and technical decisions for the solver suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "research"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/spec.md",
+      "type": "document",
+      "name": "spec.md",
+      "filePath": "specs/001-num-core-completion/spec.md",
+      "summary": "Feature specification for the complete solver suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "spec"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/tasks.md",
+      "type": "document",
+      "name": "tasks.md",
+      "filePath": "specs/001-num-core-completion/tasks.md",
+      "summary": "Detailed task breakdown for implementation",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "tasks"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/checklists/requirements.md",
+      "type": "document",
+      "name": "requirements.md",
+      "filePath": "specs/001-num-core-completion/checklists/requirements.md",
+      "summary": "Specification quality checklist",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "speckit",
+        "quality"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/contracts/gui-contracts.md",
+      "type": "document",
+      "name": "gui-contracts.md",
+      "filePath": "specs/001-num-core-completion/contracts/gui-contracts.md",
+      "summary": "UI widget and layout contracts",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/contracts/solver-interface.md",
+      "type": "document",
+      "name": "solver-interface.md",
+      "filePath": "specs/001-num-core-completion/contracts/solver-interface.md",
+      "summary": "Python protocol and solver contract definition",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/contracts/tui-commands.md",
+      "type": "document",
+      "name": "tui-commands.md",
+      "filePath": "specs/001-num-core-completion/contracts/tui-commands.md",
+      "summary": "CLI interaction schema and command definitions",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    },
+    {
+      "id": "document:specs/002-enhanced-gui-solvers/data-model.md",
+      "type": "document",
+      "name": "data-model.md",
+      "filePath": "specs/002-enhanced-gui-solvers/data-model.md",
+      "summary": "Data model for enhanced GUI and auto-solver comparison",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "data"
+      ]
+    },
+    {
+      "id": "document:specs/002-enhanced-gui-solvers/plan.md",
+      "type": "document",
+      "name": "plan.md",
+      "filePath": "specs/002-enhanced-gui-solvers/plan.md",
+      "summary": "Implementation plan for enhanced GUI and solvers",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "plan"
+      ]
+    },
+    {
+      "id": "file:tests/conftest.py",
+      "type": "file",
+      "name": "conftest.py",
+      "filePath": "tests/conftest.py",
+      "summary": "Pytest configuration and shared fixtures",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "config"
+      ]
+    },
+    {
+      "id": "file:tests/integration/test_app_flow.py",
+      "type": "file",
+      "name": "test_app_flow.py",
+      "filePath": "tests/integration/test_app_flow.py",
+      "summary": "Integration tests for the full numerical flow",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "integration"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_calculus_engine.py",
+      "type": "file",
+      "name": "test_calculus_engine.py",
+      "filePath": "tests/unit/test_calculus_engine.py",
+      "summary": "Unit tests for the calculus engine and integration solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_formatter.py",
+      "type": "file",
+      "name": "test_formatter.py",
+      "filePath": "tests/unit/test_formatter.py",
+      "summary": "Unit tests for CLI output formatting and CSV export",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_foundation.py",
+      "type": "file",
+      "name": "test_foundation.py",
+      "filePath": "tests/unit/test_foundation.py",
+      "summary": "Unit tests for foundational models and parser",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_interpolation_enhanced.py",
+      "type": "file",
+      "name": "test_interpolation_enhanced.py",
+      "filePath": "tests/unit/test_interpolation_enhanced.py",
+      "summary": "Enhanced unit tests for interpolation solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_network_solver.py",
+      "type": "file",
+      "name": "test_network_solver.py",
+      "filePath": "tests/unit/test_network_solver.py",
+      "summary": "Unit tests for linear systems solvers (Jacobi, Gauss-Seidel)",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_ode_solvers.py",
+      "type": "file",
+      "name": "test_ode_solvers.py",
+      "filePath": "tests/unit/test_ode_solvers.py",
+      "summary": "Unit tests for ODE solvers (Euler, RK4)",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_regression_solvers.py",
+      "type": "file",
+      "name": "test_regression_solvers.py",
+      "filePath": "tests/unit/test_regression_solvers.py",
+      "summary": "Unit tests for regression and curve fitting solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_root_finder.py",
+      "type": "file",
+      "name": "test_root_finder.py",
+      "filePath": "tests/unit/test_root_finder.py",
+      "summary": "Unit tests for root-finding algorithms",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue1.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue2.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue3.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue4.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue5.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue6.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:ISSUES.md",
+      "target": "document:issue7.md",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.specify/extensions.yml",
+      "target": "config:.specify/extensions/git/extension.yml",
+      "type": "configures",
+      "weight": 0.6
+    },
+    {
+      "source": "file:.specify/extensions/git/scripts/bash/auto-commit.sh",
+      "target": "file:.specify/extensions/git/scripts/bash/git-common.sh",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:.specify/extensions/git/scripts/bash/create-new-feature.sh",
+      "target": "file:.specify/extensions/git/scripts/bash/git-common.sh",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:.specify/extensions/git/scripts/powershell/auto-commit.ps1",
+      "target": "file:.specify/extensions/git/scripts/powershell/git-common.ps1",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:.specify/extensions/git/scripts/powershell/create-new-feature.ps1",
+      "target": "file:.specify/extensions/git/scripts/powershell/git-common.ps1",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "document:docs/ARCHITECTURE_DEEP.md",
+      "target": "document:docs/ARCHITECTURE.md",
+      "type": "related",
+      "weight": 0.5
+    },
+    {
+      "source": "document:.specify/memory/constitution.md",
+      "target": "document:.specify/templates/constitution-template.md",
+      "type": "similar_to",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.specify/workflows/speckit/workflow.yml",
+      "target": "config:.specify/workflows/workflow-registry.json",
+      "type": "configures",
+      "weight": 0.6
+    },
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/root_finding_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/linear_systems_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/calculus_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/linear_systems_menu.m",
+      "target": "file:matlab/run_gauss_seidel.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/run_gauss_seidel.m",
+      "target": "file:matlab/gauss_seidel_solve.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "document:docs/SOLVERS_MATH.md",
+      "target": "file:matlab/gauss_seidel_solve.m",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/SOLVERS_MATH.md",
+      "target": "file:matlab/newton_raphson_solve.m",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "file:numcore_gui/dashboard.py",
+      "target": "file:numcore_gui/help_system.py",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:numcore_gui/dashboard.py",
+      "target": "file:numcore_gui/result_panel.py",
+      "type": "contains",
+      "weight": 1
+    },
+    {
+      "source": "file:numcore_gui/dashboard.py",
+      "target": "file:numcore_gui/equation_input.py",
+      "type": "contains",
+      "weight": 1
+    },
+    {
+      "source": "file:numcore_engine/solvers/root_finder.py",
+      "target": "file:numcore_engine/solvers/__init__.py",
+      "type": "contains",
+      "weight": 1
+    },
+    {
+      "source": "file:numcore_engine/solvers/regression_solvers.py",
+      "target": "file:numcore_engine/solvers/__init__.py",
+      "type": "contains",
+      "weight": 1
+    },
+    {
+      "source": "document:specs/001-num-core-completion/plan.md",
+      "target": "document:specs/001-num-core-completion/tasks.md",
+      "type": "configures",
+      "weight": 0.6
+    },
+    {
+      "source": "document:specs/001-num-core-completion/spec.md",
+      "target": "document:specs/001-num-core-completion/contracts/solver-interface.md",
+      "type": "defines_schema",
+      "weight": 0.8
+    },
+    {
+      "source": "document:specs/001-num-core-completion/spec.md",
+      "target": "document:specs/001-num-core-completion/contracts/gui-contracts.md",
+      "type": "defines_schema",
+      "weight": 0.8
+    },
+    {
+      "source": "file:numcore_gui/visualization.py",
+      "target": "file:numcore_gui/theme.py",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:numcore_gui/smart_solver_panel.py",
+      "target": "file:numcore_gui/theme.py",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/integration/test_app_flow.py",
+      "target": "file:main.py",
+      "type": "tested_by",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/unit/test_root_finder.py",
+      "target": "file:numcore_engine/solvers/root_finder.py",
+      "type": "tested_by",
+      "weight": 0.5
+    }
+  ]
+}

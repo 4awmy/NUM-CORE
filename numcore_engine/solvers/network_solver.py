@@ -96,6 +96,7 @@ class GaussSeidelSolver(IterativeSolver):
         self._steps = []
         
         error = float('inf')
+        previous_error: Optional[float] = None
         growing_error_count = 0
         diverged = False
         
@@ -105,14 +106,13 @@ class GaussSeidelSolver(IterativeSolver):
                 sum_j = np.dot(A[i, :i], x[:i]) + np.dot(A[i, i+1:], x_old[i+1:])
                 x[i] = (b[i] - sum_j) / A[i, i]
             
-            prev_error = error
             error = np.linalg.norm(x - x_old, ord=np.inf)
             
-            # Divergence detection: 5 consecutive growing errors
-            if k > 0 and error > prev_error:
+            if previous_error is not None and error > previous_error:
                 growing_error_count += 1
             else:
                 growing_error_count = 0
+            previous_error = error
             
             if growing_error_count >= 5:
                 diverged = True
@@ -176,6 +176,7 @@ class JacobiSolver(IterativeSolver):
         self._steps = []
 
         error = float("inf")
+        previous_error: Optional[float] = None
         growing_error_count = 0
         diverged = False
 
@@ -186,14 +187,13 @@ class JacobiSolver(IterativeSolver):
                 sum_j = np.dot(A[i, :], x) - A[i, i] * x[i]
                 x_new[i] = (b[i] - sum_j) / A[i, i]
 
-            prev_error = error
             error = np.linalg.norm(x_new - x, ord=np.inf)
             
-            # Divergence detection: 5 consecutive growing errors
-            if k > 0 and error > prev_error:
+            if previous_error is not None and error > previous_error:
                 growing_error_count += 1
             else:
                 growing_error_count = 0
+            previous_error = error
             
             if growing_error_count >= 5:
                 diverged = True

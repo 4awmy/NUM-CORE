@@ -1,0 +1,287 @@
+{
+  "nodes": [
+    {
+      "id": "document:docs/SOLVERS_MATH.md",
+      "type": "document",
+      "name": "SOLVERS_MATH.md",
+      "filePath": "docs/SOLVERS_MATH.md",
+      "summary": "Mathematical reference for all numerical solvers",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "math"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/plans/2026-04-13-num-core-impl-plan.md",
+      "type": "document",
+      "name": "2026-04-13-num-core-impl-plan.md",
+      "filePath": "docs/maestro/plans/2026-04-13-num-core-impl-plan.md",
+      "summary": "Project implementation plan (Phase 1-9)",
+      "complexity": "moderate",
+      "tags": [
+        "plan",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/gui-refactor-parallel.md",
+      "type": "document",
+      "name": "gui-refactor-parallel.md",
+      "filePath": "docs/maestro/state/archive/gui-refactor-parallel.md",
+      "summary": "Archived orchestration log for GUI refactor",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/num-core-completion-wave-1.md",
+      "type": "document",
+      "name": "num-core-completion-wave-1.md",
+      "filePath": "docs/maestro/state/archive/num-core-completion-wave-1.md",
+      "summary": "Archived orchestration log for completion wave 1",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/maestro/state/archive/num-core-phase-a-solvers.md",
+      "type": "document",
+      "name": "num-core-phase-a-solvers.md",
+      "filePath": "docs/maestro/state/archive/num-core-phase-a-solvers.md",
+      "summary": "Archived orchestration log for phase A solvers",
+      "complexity": "simple",
+      "tags": [
+        "log",
+        "maestro"
+      ]
+    },
+    {
+      "id": "document:docs/screenshots/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docs/screenshots/README.md",
+      "summary": "Placeholder for screenshots documentation",
+      "complexity": "simple",
+      "tags": [
+        "docs"
+      ]
+    },
+    {
+      "id": "file:matlab/ask_yes_no.m",
+      "type": "file",
+      "name": "ask_yes_no.m",
+      "filePath": "matlab/ask_yes_no.m",
+      "summary": "MATLAB utility for yes/no prompts",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "util"
+      ]
+    },
+    {
+      "id": "file:matlab/calculus_menu.m",
+      "type": "file",
+      "name": "calculus_menu.m",
+      "filePath": "matlab/calculus_menu.m",
+      "summary": "MATLAB menu for calculus operations",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/gauss_seidel_solve.m",
+      "type": "file",
+      "name": "gauss_seidel_solve.m",
+      "filePath": "matlab/gauss_seidel_solve.m",
+      "summary": "MATLAB implementation of Gauss-Seidel solver",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/get_int_choice.m",
+      "type": "file",
+      "name": "get_int_choice.m",
+      "filePath": "matlab/get_int_choice.m",
+      "summary": "MATLAB utility for integer input selection",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "util"
+      ]
+    },
+    {
+      "id": "file:matlab/linear_systems_menu.m",
+      "type": "file",
+      "name": "linear_systems_menu.m",
+      "filePath": "matlab/linear_systems_menu.m",
+      "summary": "MATLAB menu for linear systems solvers",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/main.m",
+      "type": "file",
+      "name": "main.m",
+      "filePath": "matlab/main.m",
+      "summary": "Main entry point for MATLAB edition",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "entrypoint"
+      ]
+    },
+    {
+      "id": "file:matlab/ndd_interpolation.m",
+      "type": "file",
+      "name": "ndd_interpolation.m",
+      "filePath": "matlab/ndd_interpolation.m",
+      "summary": "MATLAB Newton's Divided Difference implementation",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/newton_raphson_solve.m",
+      "type": "file",
+      "name": "newton_raphson_solve.m",
+      "filePath": "matlab/newton_raphson_solve.m",
+      "summary": "MATLAB Newton-Raphson solver implementation",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/numerical_integration.m",
+      "type": "file",
+      "name": "numerical_integration.m",
+      "filePath": "matlab/numerical_integration.m",
+      "summary": "MATLAB numerical integration (Trapezoidal/Simpson)",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "solver"
+      ]
+    },
+    {
+      "id": "file:matlab/print_header.m",
+      "type": "file",
+      "name": "print_header.m",
+      "filePath": "matlab/print_header.m",
+      "summary": "MATLAB UI utility for headers",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/print_menu.m",
+      "type": "file",
+      "name": "print_menu.m",
+      "filePath": "matlab/print_menu.m",
+      "summary": "MATLAB UI utility for menus",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/print_result.m",
+      "type": "file",
+      "name": "print_result.m",
+      "filePath": "matlab/print_result.m",
+      "summary": "MATLAB UI utility for result banners",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/root_finding_menu.m",
+      "type": "file",
+      "name": "root_finding_menu.m",
+      "filePath": "matlab/root_finding_menu.m",
+      "summary": "MATLAB menu for root finding methods",
+      "complexity": "simple",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    },
+    {
+      "id": "file:matlab/run_gauss_seidel.m",
+      "type": "file",
+      "name": "run_gauss_seidel.m",
+      "filePath": "matlab/run_gauss_seidel.m",
+      "summary": "MATLAB interactive runner for Gauss-Seidel",
+      "complexity": "moderate",
+      "tags": [
+        "matlab",
+        "ui"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/root_finding_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/linear_systems_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/main.m",
+      "target": "file:matlab/calculus_menu.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/linear_systems_menu.m",
+      "target": "file:matlab/run_gauss_seidel.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "file:matlab/run_gauss_seidel.m",
+      "target": "file:matlab/gauss_seidel_solve.m",
+      "type": "calls",
+      "weight": 0.8
+    },
+    {
+      "source": "document:docs/SOLVERS_MATH.md",
+      "target": "file:matlab/gauss_seidel_solve.m",
+      "type": "documents",
+      "weight": 0.5
+    },
+    {
+      "source": "document:docs/SOLVERS_MATH.md",
+      "target": "file:matlab/newton_raphson_solve.m",
+      "type": "documents",
+      "weight": 0.5
+    }
+  ]
+}

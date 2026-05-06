@@ -2,11 +2,10 @@ import customtkinter as ctk
 import numpy as np
 from numcore_gui.visualization import PlotManager
 from numcore_engine.models import SimulationData
-from numcore_gui.theme import BLACK, PANEL, BORDER
+from numcore_gui import theme
 from numcore_gui.result_panel import ResultPanel
 from numcore_gui.help_system import HelpProvider
 from numcore_engine.parser import SymbolicParser
-from numcore_gui.theme import BLACK, PANEL, BORDER
 from numcore_engine.solvers.calculus_engine import (
     TrapezoidalSolver,
     SimpsonsRuleSolver,
@@ -21,14 +20,14 @@ from numcore_gui.equation_input import EquationInputWidget
 
 class CalculusPage(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
-        super().__init__(master, fg_color=BLACK, **kwargs)
+        super().__init__(master, fg_color=theme.get_bg_color(), **kwargs)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=2)
         self.grid_rowconfigure(0, weight=1)
 
         # Left Panel: Inputs
-        self.input_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.input_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.input_frame.grid(row=0, column=0, padx=(0, 10), pady=0, sticky="nsew")
         
         self.title_label = ctk.CTkLabel(self.input_frame, text="Ch 3: Numerical Calculus", font=ctk.CTkFont(size=18, weight="bold"))
@@ -91,7 +90,7 @@ class CalculusPage(ctk.CTkFrame):
         self.error_label.grid(row=11, column=0, padx=20, pady=5, sticky="w")
 
         # Right Panel: Visualization
-        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=PANEL, border_color=BORDER, border_width=1)
+        self.viz_frame = ctk.CTkFrame(self, corner_radius=10, fg_color=theme.get_panel_color(), border_color=theme.get_border_color(), border_width=1)
         self.viz_frame.grid(row=0, column=1, padx=(10, 0), pady=0, sticky="nsew")
         self.viz_frame.grid_rowconfigure(0, weight=1) # Plot takes 1/2
         self.viz_frame.grid_rowconfigure(1, weight=1) # ResultPanel takes 1/2
@@ -106,7 +105,7 @@ class CalculusPage(ctk.CTkFrame):
         self.viz_label = ctk.CTkLabel(self.plot_container, text="Function Visualization", font=ctk.CTkFont(size=16, weight="bold"))
         self.viz_label.grid(row=0, column=0, padx=10, pady=(0, 10))
 
-        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=BLACK, corner_radius=5)
+        self.plot_placeholder = ctk.CTkFrame(self.plot_container, fg_color=theme.get_bg_color(), corner_radius=5)
         self.plot_placeholder.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="nsew")
         
         self.plot_manager = PlotManager(self.plot_placeholder)
@@ -115,6 +114,13 @@ class CalculusPage(ctk.CTkFrame):
         self.result_panel = ResultPanel(self.viz_frame)
         self.result_panel.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
 
+        # Smart Solver Panel (initially hidden)
+        self.smart_panel_container = ctk.CTkFrame(self.viz_frame, fg_color="transparent")
+        self.smart_panel_container.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="nsew")
+        self.smart_panel_container.grid_forget()  # Hidden by default
+        self.smart_panel_container.grid_columnconfigure(0, weight=1)
+        self.smart_panel_container.grid_rowconfigure(0, weight=1)
+        self.current_smart_panel = None
 
         # Solvers mapping
         self.solvers = {
@@ -125,6 +131,18 @@ class CalculusPage(ctk.CTkFrame):
             "Gaussian Quadrature": GaussianQuadratureSolver(),
             "Differentiation": NumericalDifferentiationSolver()
         }
+
+    def update_theme(self):
+        """Update all widget colors when theme changes."""
+        self.configure(fg_color=theme.get_bg_color())
+        self.input_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.viz_frame.configure(fg_color=theme.get_panel_color(), border_color=theme.get_border_color())
+        self.plot_container.configure(fg_color="transparent")
+        self.plot_placeholder.configure(fg_color=theme.get_bg_color())
+        # Refresh the plot manager's theme
+        if hasattr(self, 'plot_manager') and self.plot_manager:
+            self.plot_manager._apply_dark_theme()
+            self.plot_manager.canvas.draw()
 
     def update_inputs(self, method):
         """Updates the input fields based on the selected method."""
@@ -150,6 +168,14 @@ class CalculusPage(ctk.CTkFrame):
     def solve_action(self):
         """Triggers the numerical calculus solver and updates the plot."""
         self.error_label.configure(text="")
+        
+        # Show result panel and hide smart panel when doing regular solve
+        self.smart_panel_container.grid_forget()
+        if self.current_smart_panel:
+            self.current_smart_panel.destroy()
+            self.current_smart_panel = None
+        self.result_panel.grid()
+        
         method = self.method_menu.get()
         expression = self.func_input.get_expression()
         
@@ -233,25 +259,30 @@ class CalculusPage(ctk.CTkFrame):
             
             # Filter solvers based on current mode (Integration or Differentiation)
             if method == "Differentiation":
-                # Only one differentiation solver currently, but we can compare methods if we had more
-                # For now, let's just compare integration methods if we are in integration mode
-                self.error_label.configure(text="Smart Solve is currently optimized for Integration methods.")
-                return
-
-            # Integration solvers
-            integration_solvers = {k: v for k, v in self.solvers.items() if k != "Differentiation"}
-            runner = ComparisonRunner(integration_solvers)
-
-            r_str = self.range_entry.get()
-            a, b = map(float, r_str.split(","))
-            n = int(self.n_entry.get())
-
-            kwargs = {"f": f, "a": a, "b": b, "n": n, "points": 3} # Default points for Gaussian
+                # Compare differentiation solvers
+                diff_solvers = {"Differentiation": self.solvers["Differentiation"]}
+                runner = ComparisonRunner(diff_solvers)
+                x = float(self.range_entry.get())
+                h = float(self.n_entry.get())
+                kwargs = {"f": f, "x": x, "h": h, "method": "central"}
+            else:
+                # Integration solvers
+                integration_solvers = {k: v for k, v in self.solvers.items() if k != "Differentiation"}
+                runner = ComparisonRunner(integration_solvers)
+                r_str = self.range_entry.get()
+                a, b = map(float, r_str.split(","))
+                n = int(self.n_entry.get())
+                kwargs = {"f": f, "a": a, "b": b, "n": n, "points": 3} # Default points for Gaussian
             
             comparison_result = runner.run_comparison(**kwargs)
             
-            # Show SmartSolverPanel
-            SmartSolverPanel(self, comparison_result)
+            # Hide result panel and show SmartSolverPanel
+            self.result_panel.grid_forget()
+            if self.current_smart_panel:
+                self.current_smart_panel.destroy()
+            self.smart_panel_container.grid()
+            self.current_smart_panel = SmartSolverPanel(self.smart_panel_container, comparison_result)
+            self.current_smart_panel.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
 
         except Exception as e:
             self.error_label.configure(text=f"Smart Solve Error: {str(e)}")

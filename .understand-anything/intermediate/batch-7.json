@@ -1,0 +1,199 @@
+{
+  "nodes": [
+    {
+      "id": "document:specs/001-num-core-completion/contracts/tui-commands.md",
+      "type": "document",
+      "name": "tui-commands.md",
+      "filePath": "specs/001-num-core-completion/contracts/tui-commands.md",
+      "summary": "CLI interaction schema and command definitions",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    },
+    {
+      "id": "document:specs/002-enhanced-gui-solvers/data-model.md",
+      "type": "document",
+      "name": "data-model.md",
+      "filePath": "specs/002-enhanced-gui-solvers/data-model.md",
+      "summary": "Data model for enhanced GUI and auto-solver comparison",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "data"
+      ]
+    },
+    {
+      "id": "document:specs/002-enhanced-gui-solvers/plan.md",
+      "type": "document",
+      "name": "plan.md",
+      "filePath": "specs/002-enhanced-gui-solvers/plan.md",
+      "summary": "Implementation plan for enhanced GUI and solvers",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "plan"
+      ]
+    },
+    {
+      "id": "file:tests/conftest.py",
+      "type": "file",
+      "name": "conftest.py",
+      "filePath": "tests/conftest.py",
+      "summary": "Pytest configuration and shared fixtures",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "config"
+      ]
+    },
+    {
+      "id": "file:tests/integration/test_app_flow.py",
+      "type": "file",
+      "name": "test_app_flow.py",
+      "filePath": "tests/integration/test_app_flow.py",
+      "summary": "Integration tests for the full numerical flow",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "integration"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_calculus_engine.py",
+      "type": "file",
+      "name": "test_calculus_engine.py",
+      "filePath": "tests/unit/test_calculus_engine.py",
+      "summary": "Unit tests for the calculus engine and integration solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_formatter.py",
+      "type": "file",
+      "name": "test_formatter.py",
+      "filePath": "tests/unit/test_formatter.py",
+      "summary": "Unit tests for CLI output formatting and CSV export",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_foundation.py",
+      "type": "file",
+      "name": "test_foundation.py",
+      "filePath": "tests/unit/test_foundation.py",
+      "summary": "Unit tests for foundational models and parser",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_interpolation_enhanced.py",
+      "type": "file",
+      "name": "test_interpolation_enhanced.py",
+      "filePath": "tests/unit/test_interpolation_enhanced.py",
+      "summary": "Enhanced unit tests for interpolation solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_network_solver.py",
+      "type": "file",
+      "name": "test_network_solver.py",
+      "filePath": "tests/unit/test_network_solver.py",
+      "summary": "Unit tests for linear systems solvers (Jacobi, Gauss-Seidel)",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_ode_solvers.py",
+      "type": "file",
+      "name": "test_ode_solvers.py",
+      "filePath": "tests/unit/test_ode_solvers.py",
+      "summary": "Unit tests for ODE solvers (Euler, RK4)",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_regression_solvers.py",
+      "type": "file",
+      "name": "test_regression_solvers.py",
+      "filePath": "tests/unit/test_regression_solvers.py",
+      "summary": "Unit tests for regression and curve fitting solvers",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    },
+    {
+      "id": "file:tests/unit/test_root_finder.py",
+      "type": "file",
+      "name": "test_root_finder.py",
+      "filePath": "tests/unit/test_root_finder.py",
+      "summary": "Unit tests for root-finding algorithms",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "test",
+        "unit"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:tests/integration/test_app_flow.py",
+      "target": "file:main.py",
+      "type": "tested_by",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/unit/test_root_finder.py",
+      "target": "file:numcore_engine/solvers/root_finder.py",
+      "type": "tested_by",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/unit/test_network_solver.py",
+      "target": "file:numcore_engine/solvers/network_solver.py",
+      "type": "tested_by",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/unit/test_calculus_engine.py",
+      "target": "file:numcore_engine/solvers/calculus_engine.py",
+      "type": "tested_by",
+      "weight": 0.5
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "nodes": [
+    {
+      "id": "file:numcore_gui/smart_solver_panel.py",
+      "type": "file",
+      "name": "smart_solver_panel.py",
+      "filePath": "numcore_gui/smart_solver_panel.py",
+      "summary": "GUI panel for smart solver recommendations and performance comparison",
+      "complexity": "moderate",
+      "tags": [
+        "python",
+        "gui",
+        "widget"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/theme.py",
+      "type": "file",
+      "name": "theme.py",
+      "filePath": "numcore_gui/theme.py",
+      "summary": "Central theme configuration for the application",
+      "complexity": "simple",
+      "tags": [
+        "python",
+        "gui",
+        "config"
+      ]
+    },
+    {
+      "id": "file:numcore_gui/visualization.py",
+      "type": "file",
+      "name": "visualization.py",
+      "filePath": "numcore_gui/visualization.py",
+      "summary": "Handles Matplotlib integration and dynamic animations in the GUI",
+      "complexity": "complex",
+      "tags": [
+        "python",
+        "gui",
+        "viz"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/plan.md",
+      "type": "document",
+      "name": "plan.md",
+      "filePath": "specs/001-num-core-completion/plan.md",
+      "summary": "Implementation plan for the complete numerical engineering suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "plan"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/quickstart.md",
+      "type": "document",
+      "name": "quickstart.md",
+      "filePath": "specs/001-num-core-completion/quickstart.md",
+      "summary": "Developer quickstart guide for the completion feature",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "speckit"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/research.md",
+      "type": "document",
+      "name": "research.md",
+      "filePath": "specs/001-num-core-completion/research.md",
+      "summary": "Research findings and technical decisions for the solver suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "research"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/spec.md",
+      "type": "document",
+      "name": "spec.md",
+      "filePath": "specs/001-num-core-completion/spec.md",
+      "summary": "Feature specification for the complete solver suite",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "spec"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/tasks.md",
+      "type": "document",
+      "name": "tasks.md",
+      "filePath": "specs/001-num-core-completion/tasks.md",
+      "summary": "Detailed task breakdown for implementation",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "tasks"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/checklists/requirements.md",
+      "type": "document",
+      "name": "requirements.md",
+      "filePath": "specs/001-num-core-completion/checklists/requirements.md",
+      "summary": "Specification quality checklist",
+      "complexity": "simple",
+      "tags": [
+        "docs",
+        "speckit",
+        "quality"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/contracts/gui-contracts.md",
+      "type": "document",
+      "name": "gui-contracts.md",
+      "filePath": "specs/001-num-core-completion/contracts/gui-contracts.md",
+      "summary": "UI widget and layout contracts",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    },
+    {
+      "id": "document:specs/001-num-core-completion/contracts/solver-interface.md",
+      "type": "document",
+      "name": "solver-interface.md",
+      "filePath": "specs/001-num-core-completion/contracts/solver-interface.md",
+      "summary": "Python protocol and solver contract definition",
+      "complexity": "moderate",
+      "tags": [
+        "docs",
+        "speckit",
+        "contract"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:specs/001-num-core-completion/plan.md",
+      "target": "document:specs/001-num-core-completion/tasks.md",
+      "type": "configures",
+      "weight": 0.6
+    },
+    {
+      "source": "document:specs/001-num-core-completion/spec.md",
+      "target": "document:specs/001-num-core-completion/contracts/solver-interface.md",
+      "type": "defines_schema",
+      "weight": 0.8
+    },
+    {
+      "source": "document:specs/001-num-core-completion/spec.md",
+      "target": "document:specs/001-num-core-completion/contracts/gui-contracts.md",
+      "type": "defines_schema",
+      "weight": 0.8
+    },
+    {
+      "source": "file:numcore_gui/visualization.py",
+      "target": "file:numcore_gui/theme.py",
+      "type": "imports",
+      "weight": 0.7
+    },
+    {
+      "source": "file:numcore_gui/smart_solver_panel.py",
+      "target": "file:numcore_gui/theme.py",
+      "type": "imports",
+      "weight": 0.7
+    }
+  ]
+}
