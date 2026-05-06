@@ -80,7 +80,7 @@ class NetworkSolverPage(ctk.CTkFrame):
         self.tol_entry.grid(row=10, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.tol_entry.insert(0, "1e-6")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve System", command=self.solve_action)
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve", command=self.solve_action)
         self.solve_button.grid(row=11, column=0, padx=20, pady=(20, 10))
 
         self.smart_solve_button = ctk.CTkButton(

@@ -16,8 +16,13 @@ from numcore_engine.solvers import (
     GaussSeidelSolver,
     JacobiSolver,
     EulerSolver,
+    ModifiedEulerSolver,
     RungeKuttaSolver,
+    TaylorSeriesOrder4Solver,
     LeastSquaresSolver,
+    CurveFittingSolver,
+    GaussianQuadratureSolver,
+    NumericalDifferentiationSolver,
 )
 from numcore_engine.solvers.calculus_engine import (
     InterpolationSolver,
@@ -131,8 +136,11 @@ class NumericalCLI:
             
             options = [
                 "Euler's Method (ODE)",
+                "Modified Euler's Method (Heun)",
                 "Runge-Kutta Method (RK4)",
-                "Least Squares Regression",
+                "Taylor Series Method (Order 4)",
+                "Least Squares Regression (Linear)",
+                "Curve Fitting (Quadratic, Power, etc.)",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -146,11 +154,157 @@ class NumericalCLI:
             if choice == 1:
                 self.run_euler()
             elif choice == 2:
-                self.run_rk4()
+                self.run_modified_euler()
             elif choice == 3:
-                self.run_least_squares()
+                self.run_rk4()
             elif choice == 4:
+                self.run_taylor_series()
+            elif choice == 5:
+                self.run_least_squares()
+            elif choice == 6:
+                self.run_curve_fitting()
+            elif choice == 7:
                 break
+
+    def run_modified_euler(self):
+        """Run Modified Euler's method solver."""
+        self.clear_screen()
+        self.display_header("Modified Euler (Heun)", "Second-order ODE Solver")
+        
+        self.console.print(Panel(
+            "Modified Euler's method (Heun's method) improves on Euler's method by using a "
+            "predictor-corrector approach to achieve second-order accuracy.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = ModifiedEulerSolver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_euler_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Modified-Euler")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_taylor_series(self):
+        """Run Taylor Series method solver."""
+        self.clear_screen()
+        self.display_header("Taylor Series (Order 4)", "High-order ODE Solver")
+        
+        self.console.print(Panel(
+            "The Taylor Series method uses higher-order derivatives of the function to achieve "
+            "extremely high accuracy. This implementation uses a 4th-order expansion.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "x + y"
+            x0, y0 = 0.0, 1.0
+            h = 0.1
+            steps = 10
+            self.console.print(f"[bold cyan]Example: dy/dx = x + y, y(0) = 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter dy/dx = f(x, y) (e.g., x + y)")
+            x0 = FloatPrompt.ask("Enter initial x0", default=0.0)
+            y0 = FloatPrompt.ask("Enter initial y0", default=1.0)
+            h = FloatPrompt.ask("Enter step size h", default=0.1)
+            steps = IntPrompt.ask("Enter number of steps", default=10)
+
+        solver = TaylorSeriesOrder4Solver()
+        try:
+            result = solver.solve(expression=expression, x0=x0, y0=y0, h=h, steps=steps)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_rk4_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Final y value: {result.y_data[-1]:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Taylor-Series")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_curve_fitting(self):
+        """Run Curve Fitting regression solver."""
+        self.clear_screen()
+        self.display_header("Curve Fitting", "Non-linear Regression")
+        
+        self.console.print(Panel(
+            "Fits data to non-linear models like Quadratic (y = ax^2 + bx + c), "
+            "Power (y = ax^b), or Exponential (y = ae^{bx}).",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            x_points = [1.0, 2.0, 3.0, 4.0, 5.0]
+            y_points = [1.1, 3.9, 9.2, 16.1, 25.1]
+            model_type = "quadratic"
+            self.console.print(f"[bold cyan]Example: Quadratic trend[/bold cyan]")
+        else:
+            x_str = Prompt.ask("Enter x points (space separated)")
+            y_str = Prompt.ask("Enter y points (space separated)")
+            try:
+                x_points = [float(x) for x in x_str.split()]
+                y_points = [float(y) for y in y_str.split()]
+            except ValueError:
+                self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+                return
+            
+            model_type = Prompt.ask(
+                "Select model type",
+                choices=["quadratic", "power", "exponential"],
+                default="quadratic"
+            )
+
+        solver = CurveFittingSolver()
+        try:
+            result = solver.solve(x_points=x_points, y_points=y_points, model_type=model_type)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_least_squares_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Equation: {result.metadata['equation']}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Curve-Fitting")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
 
     def run_euler(self):
         """Run Euler's method solver."""
@@ -698,11 +852,13 @@ class NumericalCLI:
         """Calculus submenu."""
         while True:
             self.clear_screen()
-            self.display_header("Calculus", "Interpolation and Integration")
+            self.display_header("Calculus", "Interpolation, Integration, and Differentiation")
             
             options = [
                 "Interpolation (Newton's Divided Difference)",
-                "Numerical Integration",
+                "Numerical Integration (Trapezoidal, Simpson's)",
+                "Gaussian Quadrature",
+                "Numerical Differentiation",
                 "Back to Main Menu"
             ]
             self.display_menu_options(options)
@@ -718,7 +874,108 @@ class NumericalCLI:
             elif choice == 2:
                 self.run_integration()
             elif choice == 3:
+                self.run_gaussian_quadrature()
+            elif choice == 4:
+                self.run_numerical_differentiation()
+            elif choice == 5:
                 break
+
+    def run_gaussian_quadrature(self):
+        """Run Gaussian Quadrature solver."""
+        self.clear_screen()
+        self.display_header("Gaussian Quadrature", "High-precision Integration")
+        
+        self.console.print(Panel(
+            "Gaussian Quadrature is a highly efficient numerical integration method that chooses "
+            "optimal sample points (roots of Legendre polynomials) to achieve maximum precision.",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            expression = "exp(x**2)"
+            a, b = 0.0, 1.0
+            n = 3
+            self.console.print(f"[bold cyan]Example: Integral of exp(x^2) from 0 to 1[/bold cyan]")
+        else:
+            expression = Prompt.ask("Enter function f(x) (e.g., x**2 + 1)")
+            a = FloatPrompt.ask("Enter lower limit a", default=0.0)
+            b = FloatPrompt.ask("Enter upper limit b", default=1.0)
+            n = IntPrompt.ask("Enter number of points (2-5)", default=3, choices=["2", "3", "4", "5"])
+
+        solver = GaussianQuadratureSolver()
+        try:
+            result = solver.solve(expression=expression, a=a, b=b, n=n)
+            self.last_steps = solver.get_steps()
+            self.formatter.display_integration_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Total Integral: {result.metadata['total_integral']:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Gaussian-Quadrature")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
+
+    def run_numerical_differentiation(self):
+        """Run Numerical Differentiation solver."""
+        self.clear_screen()
+        self.display_header("Numerical Differentiation", "Estimate Derivatives from Data")
+        
+        self.console.print(Panel(
+            "Estimates the derivative of a function at a point using finite difference formulas "
+            "(Forward, Backward, or Central).",
+            title="[bold]Method Description[/bold]",
+            border_style="blue",
+            padding=(1, 1)
+        ))
+
+        is_example = Prompt.ask("Load engineering example? (y/n)", choices=["y", "n"], default="n") == "y"
+        
+        if is_example:
+            x_points = [0.0, 0.1, 0.2, 0.3, 0.4]
+            y_points = [0.0, 0.0998, 0.1987, 0.2955, 0.3894]
+            target_x = 0.2
+            method = "central"
+            self.console.print(f"[bold cyan]Example: Derivative of sin(x) at x=0.2[/bold cyan]")
+        else:
+            x_str = Prompt.ask("Enter x points (space separated)")
+            y_str = Prompt.ask("Enter y points (space separated)")
+            try:
+                x_points = [float(x) for x in x_str.split()]
+                y_points = [float(y) for y in y_str.split()]
+            except ValueError:
+                self.console.print("[bold red]Error: Please enter valid numbers.[/bold red]")
+                return
+            
+            target_x = FloatPrompt.ask("Enter x value to differentiate at")
+            method = Prompt.ask(
+                "Select differentiation method",
+                choices=["forward", "backward", "central"],
+                default="central"
+            )
+
+        solver = NumericalDifferentiationSolver()
+        try:
+            result = solver.solve(x_points=x_points, y_points=y_points, target_x=target_x, method=method)
+            self.last_steps = solver.get_steps()
+            # Reusing interpolation steps display as it's similar (table of values)
+            self.formatter.display_interpolation_steps(self.last_steps)
+            self.console.print(Panel(
+                f"[bold green]Derivative at x={target_x}: {result.metadata['derivative']:.8f}[/bold green]",
+                title="Result",
+                border_style="green"
+            ))
+            self.ask_export(self.get_steps_from_result(), "Differentiation")
+        except Exception as e:
+            self.console.print(f"[bold red]Error: {str(e)}[/bold red]")
+        
+        Prompt.ask("\nPress Enter to return to menu")
 
     def run_interpolation(self):
         """Run Interpolation solver."""

@@ -180,7 +180,7 @@ class RootFinderPage(ctk.CTkFrame):
         self.tol_entry.grid(row=14, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.tol_entry.insert(0, "1e-6")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Equation", command=self.solve_action)
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve", command=self.solve_action)
         self.solve_button.grid(row=15, column=0, padx=20, pady=(20, 10))
 
         self.smart_solve_button = ctk.CTkButton(

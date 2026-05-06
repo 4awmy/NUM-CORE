@@ -898,6 +898,16 @@ class SimpsonsRuleSolver(Solver):
         self._steps: List[NumericalStep] = []
 
     def solve(self, **kwargs: Any) -> SimulationData:
+        """
+        Execute Simpson's rule integration (1/3 or 3/8).
+
+        Args:
+            method: '1/3' or '3/8' (default '1/3').
+            **kwargs: Arguments passed to the specific Simpson's solver.
+
+        Returns:
+            SimulationData containing the integration result.
+        """
         method = kwargs.get("method", "1/3")
         
         if method == "1/3":
@@ -930,6 +940,18 @@ class GaussianQuadratureSolver(Solver):
         self._steps: List[NumericalStep] = []
 
     def solve(self, **kwargs: Any) -> SimulationData:
+        """
+        Execute Gaussian Quadrature integration.
+
+        Args:
+            f: Function to integrate.
+            a: Start of interval.
+            b: End of interval.
+            points: Number of points (2 or 3).
+
+        Returns:
+            SimulationData containing the integration result.
+        """
         f = kwargs.get("f")
         a = float(kwargs.get("a", -1))
         b = float(kwargs.get("b", 1))
@@ -939,37 +961,57 @@ class GaussianQuadratureSolver(Solver):
             raise ValueError("A function 'f' must be provided.")
 
         if points == 2:
-            nodes = [-1/np.sqrt(3), 1/np.sqrt(3)]
+            # Nodes and weights for n=2 on [-1, 1]
+            nodes = [-1.0 / np.sqrt(3), 1.0 / np.sqrt(3)]
             weights = [1.0, 1.0]
         elif points == 3:
+            # Nodes and weights for n=3 on [-1, 1]
             nodes = [-np.sqrt(0.6), 0.0, np.sqrt(0.6)]
-            weights = [5/9, 8/9, 5/9]
+            weights = [5.0 / 9.0, 8.0 / 9.0, 5.0 / 9.0]
         else:
             raise ValueError("Only 2-point and 3-point Gaussian Quadrature are supported.")
 
-        # Transform nodes from [-1, 1] to [a, b]
-        # x = (b-a)/2 * t + (b+a)/2
-        transformed_nodes = [(b - a) / 2 * t + (b + a) / 2 for t in nodes]
+        # Transformation factor: dx = (b-a)/2 * dt
+        factor = (b - a) / 2.0
         
         result = 0.0
         self._steps = []
-        for i, (t_node, w) in enumerate(zip(transformed_nodes, weights)):
-            val = f(t_node)
-            term = w * val
+        
+        for i, (t, w) in enumerate(zip(nodes, weights)):
+            # Transform node from [-1, 1] to [a, b]
+            # x = (b-a)/2 * t + (b+a)/2
+            x = factor * t + (b + a) / 2.0
+            f_val = f(x)
+            term = w * f_val
             result += term
-            self._steps.append(NumericalStep(
-                step_idx=i + 1,
-                value=term,
-                details={"node": t_node, "weight": w, "f_val": val}
-            ))
+            
+            self._steps.append(
+                NumericalStep(
+                    step_idx=i + 1,
+                    value=term * factor,
+                    details={
+                        "standard_node": t,
+                        "transformed_node": x,
+                        "weight": w,
+                        "f_val": f_val,
+                        "contribution": term * factor
+                    }
+                )
+            )
 
-        result *= (b - a) / 2
+        final_result = result * factor
 
         return SimulationData(
             title=f"Gaussian Quadrature ({points}-point)",
-            x_data=transformed_nodes,
-            y_data=[result],
-            metadata={"points": points, "total_integral": result, "weights": weights, "nodes": nodes}
+            x_data=[a, b],
+            y_data=[final_result],
+            metadata={
+                "points": points,
+                "total_integral": final_result,
+                "weights": weights,
+                "standard_nodes": nodes,
+                "interval": [a, b]
+            }
         )
 
     def get_steps(self) -> List[NumericalStep]:

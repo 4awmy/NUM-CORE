@@ -13,8 +13,8 @@ from .calculus_engine import (
     GaussianQuadratureSolver,
     NumericalDifferentiationSolver
 )
-from .ode_solvers import EulerSolver, RungeKuttaSolver
-from .regression_solvers import LeastSquaresSolver
+from .ode_solvers import EulerSolver, RungeKuttaSolver, ModifiedEulerSolver, TaylorSeriesOrder4Solver
+from .regression_solvers import LeastSquaresSolver, CurveFittingSolver
 from .comparison import ComparisonRunner
 
 __all__ = [
@@ -37,6 +37,9 @@ __all__ = [
     "NumericalDifferentiationSolver",
     "EulerSolver",
     "RungeKuttaSolver",
+    "ModifiedEulerSolver",
+    "TaylorSeriesOrder4Solver",
     "LeastSquaresSolver",
+    "CurveFittingSolver",
     "ComparisonRunner",
 ]
