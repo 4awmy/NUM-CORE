@@ -55,7 +55,7 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.guess_entry.grid(row=6, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.guess_entry.insert(0, "1.0")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve Example", command=self.solve_action)
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve", command=self.solve_action)
         self.solve_button.grid(row=7, column=0, padx=20, pady=20)
 
         # Results area
@@ -66,7 +66,7 @@ class Chapter1AppPage(ctk.CTkFrame):
         self.result_title = ctk.CTkLabel(self.results_panel, text="Computation Results", font=ctk.CTkFont(size=12, weight="bold"))
         self.result_title.grid(row=0, column=0, padx=10, pady=(5, 0), sticky="w")
         
-        self.result_label = ctk.CTkLabel(self.results_panel, text="Click 'Solve Example' to begin.", font=ctk.CTkFont(size=11))
+        self.result_label = ctk.CTkLabel(self.results_panel, text="Click 'Solve' to begin.", font=ctk.CTkFont(size=11))
         self.result_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         # Right Panel: Visualization

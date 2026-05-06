@@ -74,7 +74,7 @@ class CalculusPage(ctk.CTkFrame):
         self.n_entry.grid(row=8, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.n_entry.insert(0, "10")
 
-        self.solve_button = ctk.CTkButton(self.input_frame, text="Execute Mission", command=self.solve_action)
+        self.solve_button = ctk.CTkButton(self.input_frame, text="Solve", command=self.solve_action)
         self.solve_button.grid(row=9, column=0, padx=20, pady=(20, 10))
 
         self.smart_solve_button = ctk.CTkButton(

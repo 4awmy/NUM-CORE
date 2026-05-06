@@ -114,11 +114,11 @@ def test_simple_iteration_convergence_check():
     solver = SimpleIterationSolver()
     # x = cos(x), g'(x) = -sin(x), |g'(0.5)| = sin(0.5) approx 0.479 < 1
     result = solver.solve(expression="cos(x)", initial_guess=0.5)
-    assert result.metadata["convergence_passed"] is True
+    assert result.metadata["convergence_check_passed"] is True
 
     # x = x^2 + x - 2, g(x) = x^2 + x - 2, g'(x) = 2x + 1, |g'(2)| = 5 > 1
     result = solver.solve(expression="x**2 + x - 2", initial_guess=2.0)
-    assert result.metadata["convergence_passed"] is False
+    assert result.metadata["convergence_check_passed"] is False
 
 
 def test_newton_raphson_fallback():
