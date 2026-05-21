@@ -1,4 +1,4 @@
-import sups
+import sys
 import argparse
 import os
 import matplotlib.pyplot as plt
